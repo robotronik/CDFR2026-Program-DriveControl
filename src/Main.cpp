@@ -7,8 +7,7 @@
 #include "led.h"
 #include "types/sequence.h"
 #include "position.h"
-#include "Asservissement.h"
-#include "movement.h"
+#include "control.h"
 #include "i2c_interface.h"
 #include "button.h"
 #include "odometry/I2Cdevice.h"
@@ -24,7 +23,6 @@
 
 // This is needed for the linker to find the __dso_handle symbol
 
-movement* robotAsserv = nullptr;
 i2c_interface* robotI2cInterface = nullptr;
 
 void I2CRecieveData(uint8_t* data, int size) {
@@ -39,9 +37,7 @@ int main(void)
 	//SETUP
 	clock_setup();
 
-	
-	robotAsserv = new movement();
-	robotI2cInterface = new i2c_interface(robotAsserv);
+	robotI2cInterface = new i2c_interface();
 
 	ledSetup();
     buttonSetup();
@@ -50,7 +46,6 @@ int main(void)
 	i2c_setup();
 	setCallbackReceive(I2CRecieveData);
 	setupDeviceI2C();
-
 
 	//WAIT
 	delay_ms(1000);
@@ -85,12 +80,9 @@ int main(void)
     sequence dbg;
     bool isDebug = false;
 
-    // Reset because the stm has been booted for 3 seconds
-	robotAsserv->reset();
-
 	while (1) {
 		updatePositionData();
-        robotAsserv->loop();
+		updateWheels();
 
         if (isDebug) {
             testloop(&mySeq);
@@ -160,60 +152,11 @@ void testMotors(){
 }
 
 void testloop(sequence* seq) {
-
 	seq->start();
 
 	seq->delay([](){
-        robotI2cInterface->set_coordinates(0,0,0);
-        robotI2cInterface->set_motor_state(true);
-		robotI2cInterface->consigne_angulaire(90,Rotation::SHORTEST);
+        robotI2cInterface->set_coordinates({0,0,0});
+        robotI2cInterface->enable();
+		robotI2cInterface->set_target({200,0,0});
 	},0);
-
-	// seq->delay([](){
-	// 	robotAsserv->setTargetAngulaire(-90,ROTATION_TRIGO);
-	// },3000);
-
-	// seq->delay([](){
-	// 	robotAsserv->setTargetAngulaire(90,ROTATION_HORRAIRE);
-	// },3000);
-
-	seq->delay([](){
-	robotI2cInterface->consigne_angulaire(0,Rotation::SHORTEST);
-	},3000);
-
-	seq->delay([](){
-		robotI2cInterface->go_to_point(1000,1000);
-	},3000);
-
-    seq->delay([](){
-		robotI2cInterface->stop();
-	},2000);
-
-	seq->delay([](){
-		robotI2cInterface->go_to_point(0,0,0);
-	},7000);
-
-	seq->delay([](){
-		robotI2cInterface->go_to_point(1000,1000,Rotation::ANTICLOCKWISE,Direction::BACKWARD);
-	},7000);
-
-	seq->delay([](){
-		robotI2cInterface->go_to_point(0,0,0,Rotation::CLOCKWISE,Direction::BACKWARD,Rotation::ANTICLOCKWISE);
-	},7000);
-
-	// seq->delay([](){
-	// 	robotAsserv->setTargetStop();
-	// },1500);
-
-	// seq->delay([](){
-	// 	robotAsserv->setTargetLineaire(0,0);
-	// },10000);
-
-	// seq->delay([](){
-	// 	robotAsserv->setTargetAngulaire(90,ROTATION_TRIGO);
-	// },7000);
-
-	// seq->delay([](){
-	// 	robotAsserv->setTargetAngulaire(0,ROTATION_HORRAIRE);
-	// },7000);
 }

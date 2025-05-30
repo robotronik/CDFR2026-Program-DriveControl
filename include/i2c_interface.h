@@ -1,7 +1,6 @@
 #pragma once
 
 #include "robot_interface.h"
-#include "movement.h"
 #include "I2C.h"
 
 #define STRUCT_PACK __attribute__((__packed__))
@@ -13,19 +12,20 @@ typedef struct {
 
 class i2c_interface : public Robot_interface
 {
-private:
-    movement* robotAsserv;
 public:
-    i2c_interface(movement* inRobotAsservisement);
+    i2c_interface(){};
     ~i2c_interface(){};
 
     void get_version(uint16_t version);
+
     void set_green_led(bool status);
     void set_red_led(bool status);
+
     void get_coordinates(position_t &pos, position_t &vel, position_t &acc);
     void set_coordinates(position_t pos);
-    void set_target(position_t pos);
+
     void get_target(position_t &pos);
+    void set_target(position_t pos);
 
     void disable();
     void enable();

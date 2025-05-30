@@ -3,8 +3,7 @@
 #include "Motor.h"
 #include "position.h"
 
-i2c_interface::i2c_interface(movement* inRobotAsservisement):
-robotAsserv(inRobotAsservisement) {
+i2c_interface::i2c_interface(){
 
 }
 
@@ -41,12 +40,12 @@ void i2c_interface::set_coordinates(position_t pos) {
     setPosition(pos);
 }
 
-void i2c_interface::set_target(position_t pos) {
-    setTarget(pos);
-}
-
 void i2c_interface::get_target(position_t& pos) {
     pos = global_target;
+}
+
+void i2c_interface::set_target(position_t pos) {
+    setTarget(pos);
 }
 
 void i2c_interface::disable() {
