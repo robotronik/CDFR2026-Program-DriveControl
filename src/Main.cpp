@@ -105,7 +105,7 @@ int main(void)
 
 		// Write the position to debug console
         dbg.interval([](){
-			usartprintf("x : %1lf mm, y : %1lf mm, a : %1lf degs\n", pos.x, pos.y, pos.a);;
+			usartprintf("x : %1lf mm, y : %1lf mm, a : %1lf degs\n", global_pos.x, global_pos.y, global_pos.a);;
 		},100);
 
 		//BLINK LED

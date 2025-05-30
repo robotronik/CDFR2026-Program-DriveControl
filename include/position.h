@@ -1,12 +1,15 @@
 #pragma once
 #include "types/structs.h"
 
-extern position_t pos;
-extern position_t vel;
-extern position_t acc;
+// Read only
+extern position_t global_pos;
+extern position_t global_vel;
+extern position_t global_acc;
+extern position_t global_target;
 
 void updatePositionData();
 
 void setPosition(position_t incommingPos);
 void setPosition(double x, double y, double a);
-bool getPositionChanged();
+void setTarget(position_t incommingPos);
+void setTarget(double x, double y, double a);

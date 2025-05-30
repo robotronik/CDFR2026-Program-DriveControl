@@ -67,14 +67,14 @@ void Asservissement::loop(){
     //     asservissementLoop();
     // }
     if (getPositionChanged()) {
-        setTarget(pos);
+        setTarget(global_pos);
     }
     asservissementLoop();
 }
 
 
 void Asservissement::asservissementLoop(){
-    double targetAngle = calculAngle(target.x,target.y,pos);
+    double targetAngle = calculAngle(target.x,target.y,global_pos);
     bool reTargetAngle = false;
     double valPidLineaire;
     double valPidAngulaire;
@@ -82,7 +82,7 @@ void Asservissement::asservissementLoop(){
     double reduceErrorAngular;
     double realErrorLinear = getLinearErrorReel();
     double reduceErrorLinear = realErrorLinear-positionControlLineaire.getPostion();
-    uint32_t timeLastPos = pos.time;
+    uint32_t timeLastPos = global_pos.time;
 
     if (realErrorLinear >= 100) {
         reTargetAngle = true;
@@ -129,8 +129,8 @@ void Asservissement::asservissementLoop(){
 
 void Asservissement::setProtectedTargetAngulaire(double angle, Rotation rotation) {
     if (positionControlLineaire.getPostion()!=0) {
-        target.x = pos.x;
-        target.y = pos.y;
+        target.x = global_pos.x;
+        target.y = global_pos.y;
         positionControlLineaire.setPosition(0);
         positionControlLineaire.setTarget(0);
     }
@@ -147,7 +147,7 @@ void Asservissement::setTargetAngulaire(double angle, Rotation rotation) {
 
 void Asservissement::setProtectedTargetLineaire(double x, double y) {
     if (positionControlAngulaire.getPostion()!=0) {
-        target.a = mod_angle(pos.a);
+        target.a = mod_angle(global_pos.a);
         positionControlAngulaire.setPosition(0);
         positionControlAngulaire.setTarget(0);
     }
@@ -163,7 +163,7 @@ void Asservissement::setTargetLineaire(double x, double y) {
 }
 
 void Asservissement::setTargetLookAt(double x, double y, Rotation rotation) {
-    double angleErreur = mod_angle(calculAngle(x,y,pos)-pos.a);
+    double angleErreur = mod_angle(calculAngle(x,y,global_pos)-global_pos.a);
     if (angleErreur>0 && rotation == Rotation::CLOCKWISE) {
         angleErreur -= 360;
     }
@@ -173,27 +173,27 @@ void Asservissement::setTargetLookAt(double x, double y, Rotation rotation) {
 
     if (rotation == Rotation::SHORTEST)
         if (angleErreur<90 && angleErreur>-90) {
-            setProtectedTargetAngulaire(calculAngle(x,y,pos),rotation);
+            setProtectedTargetAngulaire(calculAngle(x,y,global_pos),rotation);
         }
         else {
-            setProtectedTargetAngulaire(mod_angle(calculAngle(x,y,pos)+180),rotation);
+            setProtectedTargetAngulaire(mod_angle(calculAngle(x,y,global_pos)+180),rotation);
         }
     else {
         if (angleErreur<180 && angleErreur>-180) {
-            setProtectedTargetAngulaire(calculAngle(x,y,pos),rotation);
+            setProtectedTargetAngulaire(calculAngle(x,y,global_pos),rotation);
         }
         else {
-            setProtectedTargetAngulaire(mod_angle(calculAngle(x,y,pos)+180),rotation);
+            setProtectedTargetAngulaire(mod_angle(calculAngle(x,y,global_pos)+180),rotation);
         }
     }
 }
 
 void Asservissement::setTargetLookAtForward(double x, double y, Rotation rotation) {
-    setProtectedTargetAngulaire(calculAngle(x,y,pos),rotation);
+    setProtectedTargetAngulaire(calculAngle(x,y,global_pos),rotation);
 }
 
 void Asservissement::setTargetLookAtBackward(double x, double y, Rotation rotation) {
-    setProtectedTargetAngulaire(mod_angle(calculAngle(x,y,pos)+180),rotation);
+    setProtectedTargetAngulaire(mod_angle(calculAngle(x,y,global_pos)+180),rotation);
 }
 
 void Asservissement::setTargetStop(void){
@@ -239,7 +239,7 @@ Direction Asservissement::getDirectionSide(void){
 
 void Asservissement::reset(void){
     currentState = Rotation::SHORTEST;
-    target = pos;
+    target = global_pos;
     positionControlLineaire.reset(0);
     positionControlAngulaire.reset(0);
     pidAngulaire.reset();
@@ -257,7 +257,7 @@ void Asservissement::reset(void){
 //******************************************************
 
 double Asservissement::getAngularErrorReel(void){
-    double angleErreur = mod_angle(target.a-pos.a);
+    double angleErreur = mod_angle(target.a-global_pos.a);
 
     if (angleErreur>0 && currentState == Rotation::CLOCKWISE) {
         angleErreur -= 360;
@@ -273,11 +273,11 @@ double Asservissement::getAngularErrorReel(void){
 
 double Asservissement::getLinearErrorReel(void){
     //Première partie, connaitre l'angle formé entre le robot et le point de la target
-    double erreurAngulaireSurPoint = calculAngle(target.x,target.y,pos);
+    double erreurAngulaireSurPoint = calculAngle(target.x,target.y,global_pos);
 
     // Calculer la distance entre le robot et la droite orthogonal qui passe par le point de la target
-    double distanceRobotPoint = sqrt(pow((target.x - pos.x),2)+pow((target.y -pos.y),2));
-    return (distanceRobotPoint*cos((erreurAngulaireSurPoint-pos.a)*DEG_TO_RAD));
+    double distanceRobotPoint = sqrt(pow((target.x - global_pos.x),2)+pow((target.y -global_pos.y),2));
+    return (distanceRobotPoint*cos((erreurAngulaireSurPoint-global_pos.a)*DEG_TO_RAD));
 }
 
 

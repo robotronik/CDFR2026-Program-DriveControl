@@ -5,34 +5,33 @@
 #include "AsservissementMath.h" // for mod_angle
 #include "led.h"
 
-position_t pos = {0.0, 0.0, 0.0};
-position_t vel = {0.0, 0.0, 0.0};
-position_t acc = {0.0, 0.0, 0.0};
+position_t global_pos = {0.0, 0.0, 0.0};
+position_t global_vel = {0.0, 0.0, 0.0};
+position_t global_acc = {0.0, 0.0, 0.0};
 static position_t newPosition = {0.0, 0.0, 0.0};
+
+position_t global_target = {0.0, 0.0, 0.0};
+static position_t newTarget = {0.0, 0.0, 0.0};
+
 static bool needChangePos = false;
-static bool positionChanged = false;
 
 void updatePositionData(){
-    
     if (needChangePos) {
-        pos = newPosition;
+        global_pos = newPosition;
         needChangePos = false;
-        positionChanged = true;
-        otos->setPosition(pos);
+        otos->setPosition(global_pos);
     }
+
+    global_target = newTarget;
     
     RedLED_Clear();
     // Get the current position from the OTOS
     position_t r_pos, r_vel, r_acc;
     if (otos->getPosVelAcc(r_pos, r_vel, r_acc) == ret_OK) {
         // Update the position, velocity, and acceleration data
-        pos = r_pos;
-        vel = r_vel;
-        acc = r_acc;
-        // Update the time of the position data
-        pos.time = get_uptime_ms();
-        vel.time = pos.time;
-        acc.time = pos.time;
+        global_pos = r_pos;
+        global_vel = r_vel;
+        global_acc = r_acc;
     }
     else{
         // If the OTOS is not connected
@@ -49,12 +48,16 @@ void setPosition(double x, double y, double a) {
     newPosition.x = x;
     newPosition.y = y;
     newPosition.a = mod_angle(a);
-    newPosition.time = get_uptime_ms();
-    needChangePos = true;
+}
+void setTarget(position_t incommingPos){
+    newTarget = incommingPos;
+    newTarget.a = mod_angle(incommingPos.a);
+    global_target = newTarget;
 }
 
-bool getPositionChanged(){
-    bool bret = positionChanged;
-    positionChanged = false;
-    return bret;
+void setTarget(double x, double y, double a) {
+    newTarget.x = x;
+    newTarget.y = y;
+    newTarget.a = mod_angle(a);
+    global_target = newTarget;
 }

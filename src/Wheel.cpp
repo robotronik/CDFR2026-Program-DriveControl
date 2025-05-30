@@ -3,9 +3,9 @@
 #include "config.h"
 #include "types/structs.h"
 
-Wheel* wheelA = nullptr;  // WheelA at 0°
+Wheel* wheelA = nullptr; // WheelA at 0°
 Wheel* wheelB = nullptr; // WheelB at 120°
-Wheel* wheelC = nullptr;  // WheelC at 240°
+Wheel* wheelC = nullptr; // WheelC at 240°
 
 Wheel::Wheel(double dist, double ang, double diameter, Motor* motorPtr) :
     distanceToCenter(dist), angle(ang), diam(diameter), motor(motorPtr) 
