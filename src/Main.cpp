@@ -8,7 +8,7 @@
 #include "types/sequence.h"
 #include "position.h"
 #include "control.h"
-#include "i2c_interface.h"
+#include "interface/drive_interface.h"
 #include "button.h"
 #include "odometry/I2Cdevice.h"
 #include "odometry/OTOS.h"
@@ -23,10 +23,10 @@
 
 // This is needed for the linker to find the __dso_handle symbol
 
-i2c_interface* robotI2cInterface = nullptr;
+drive_interface* robotI2cInterface = nullptr;
 
 void I2CRecieveData(uint8_t* data, int size) {
-    robotI2cInterface->I2CDataSwitch(data, size);
+    I2CDataSwitch(data, size);
 }
 
 void testMotors();
@@ -37,7 +37,7 @@ int main(void)
 	//SETUP
 	clock_setup();
 
-	robotI2cInterface = new i2c_interface();
+	robotI2cInterface = new drive_interface();
 
 	ledSetup();
     buttonSetup();

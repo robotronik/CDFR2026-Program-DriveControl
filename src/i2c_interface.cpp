@@ -1,96 +1,94 @@
 #include "i2c_interface.h"
-#include "led.h"
-#include "Motor.h"
-#include "position.h"
-
-i2c_interface::i2c_interface(){
-
-}
-
-void i2c_interface::get_version(uint16_t &part1) {
-    //////
-}
-
-void i2c_interface::setReponseBuffer(uint8_t* data, int size) {
-    I2CSetBuffer(data,size);
-}
-
-void i2c_interface::set_green_led(bool status) {
-    if (status)
-        GreenLED_Set();
-    else
-        GreenLED_Clear();
-}
+#include "I2C.h"
+#include "interface/drive_interface.h"
 
 
-void i2c_interface::set_red_led(bool status) {
-    if (status)
-        RedLED_Set();
-    else
-        RedLED_Clear();
-}
-
-void i2c_interface::get_coordinates(position_t &pos, position_t &vel, position_t &acc) {
-    pos = global_pos;
-    vel = global_vel;
-    acc = global_acc;
-}
-
-void i2c_interface::set_coordinates(position_t pos) {
-    setPosition(pos);
-}
-
-void i2c_interface::get_target(position_t& pos) {
-    pos = global_target;
-}
-
-void i2c_interface::set_target(position_t pos) {
-    setTarget(pos);
-}
-
-void i2c_interface::disable() {
-    DriveDisable();
-}
-
-void i2c_interface::enable() {
-    asserv_reset();
-    DriveEnable();
-}
-
-void i2c_interface::get_current(int16_t &currentRight, int16_t &currentLeft) {
-    currentLeft = motorA->GetCurrent();
-}
-
-void i2c_interface::get_speed(int16_t &speedRight, int16_t &speedLeft) {
-    // TODO
-}
-
-void i2c_interface::set_brake_state(bool brakeEnable) {
-    if (brakeEnable) {
-        motorA->Brake(true);
-        motorB->Brake(true);
-        motorC->Brake(true);
+void I2CDataSwitch(uint8_t* data, int size){
+    uint8_t* dataPtr = data + 1;
+    uint8_t dataRet[64] = {0}; // Response buffer
+    int dataRetSize = 0;
+    switch (data[0]){
+        case CMD_GET_VERSION:
+        pack(dataRet, &robotI2cInterface->get_version(), sizeof(uint8_t));
+        dataRetSize = sizeof(uint8_t);
+        break;
+        case CMD_SET_GREEN_LED:
+            robotI2cInterface->set_green_led(data[1]);
+            break;
+        case CMD_SET_RED_LED:
+            robotI2cInterface->set_red_led(data[1]);
+            break;
+        case CMD_GET_MOTION:
+            {
+                packed_motion_t motion = robotI2cInterface->get_motion();
+                pack(dataRet, &motion, sizeof(packed_motion_t));
+                dataRetSize = sizeof(packed_motion_t);
+            }
+            break;
+        case CMD_SET_COORDINATES:
+            {
+                packed_vector_t pos;
+                unpack(dataPtr, &pos, sizeof(packed_vector_t));
+                robotI2cInterface->set_coordinates(pos);
+            }
+            break;
+        case CMD_GET_TARGET:
+            {
+                packed_vector_t target = robotI2cInterface->get_target();
+                pack(dataRet, &target, sizeof(packed_vector_t));
+                dataRetSize = sizeof(packed_vector_t);
+            }
+            break;
+        case CMD_SET_TARGET:
+            {
+                packed_vector_t pos;
+                unpack(dataPtr, &pos, sizeof(packed_vector_t));
+                robotI2cInterface->set_target(pos);
+            }
+            break;
+        case CMD_DISABLE:
+            robotI2cInterface->disable();
+            break;
+        case CMD_ENABLE:
+            robotI2cInterface->enable();
+            break;
+        case CMD_GET_CURRENT:
+            {
+                packed_motor_t current = robotI2cInterface->get_current();
+                pack(dataRet, &current, sizeof(packed_motor_t));
+                dataRetSize = sizeof(packed_motor_t);
+            }
+            break;
+        case CMD_GET_SPEED:
+            {
+                packed_motor_t speed = robotI2cInterface->get_speed();
+                pack(dataRet, &speed, sizeof(packed_motor_t));
+                dataRetSize = sizeof(packed_motor_t);
+            }
+            break;
+        case CMD_SET_BRAKE_STATE:
+            robotI2cInterface->set_brake_state(data[1]);
+            break;
+        case CMD_SET_MAX_TORQUE:
+            {
+                double current;
+                unpack(dataPtr, &current, sizeof(double));
+                robotI2cInterface->set_max_torque(current);
+            }
+            break;
+        case CMD_GET_STATUS:
+            {
+                status_t status = robotI2cInterface->get_status();
+                pack(dataRet, &status, sizeof(status_t));
+                dataRetSize = sizeof(status_t);
+            }
+            break;
+        default:
+            // Handle unknown command
+            dataRet[0] = 0xFF; // Error code for unknown command
+            dataRetSize = 1;
+            break;
     }
-    else {
-        robotAsserv->reset();
-        motorA->SetSpeedSigned(0);
-        motorB->SetSpeedSigned(0);
-        motorC->SetSpeedSigned(0);
-        motorA->Brake(false);
-        motorB->Brake(false);
-        motorC->Brake(false);
-    }
-}
-
-void i2c_interface::set_max_torque(double current){
-    // Reported to 10.8 amps, TODO change
-    int val = (int)(current / 10.8 * 100.0);
-    motorA->SetMaxTorque(val);
-    motorB->SetMaxTorque(val);
-    motorC->SetMaxTorque(val);
-}
-
-void i2c_interface::get_status(status_t& status) {
-    status.is_error1 = false;
-    status.is_error2 = false;
+    if (dataRetSize > 0){
+        I2CDataSend(dataRet, dataRetSize);
 }
