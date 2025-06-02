@@ -9,6 +9,7 @@
 #include "position.h"
 #include "control.h"
 #include "interface/drive_interface.h"
+#include "i2c_interface.h"
 #include "button.h"
 #include "odometry/I2Cdevice.h"
 #include "odometry/OTOS.h"
