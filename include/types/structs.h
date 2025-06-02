@@ -1,6 +1,5 @@
 #pragma once
 
-#include "type.h"
 #include "stdint.h"
 
 #define PI 3.14159265359
@@ -14,10 +13,6 @@ enum class BaseCommand {
     MAX_SPEED_LINEAR,
     MAX_SPEED_ANGULAR
 };
-
-const char* directionToChar(Direction dir);
-const char* rotationToChar(Rotation rot);
-const char* baseCommandToString(BaseCommand cmd);
 
 typedef struct{
 	double x = 0;
