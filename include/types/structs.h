@@ -6,14 +6,6 @@
 #define DEG_TO_RAD PI/180
 #define RAD_TO_DEG 180/PI
 
-enum class BaseCommand {
-    ANGULAR_THETA,
-    ANGULAR_LOOKAT,
-    LINEAR,
-    MAX_SPEED_LINEAR,
-    MAX_SPEED_ANGULAR
-};
-
 typedef struct{
 	double x = 0;
     double y = 0;
@@ -34,26 +26,3 @@ typedef enum {
     /// @brief Fail
     ret_FAIL = -1,
 } return_t;
-
-typedef struct{
-	int L = 0;
-    int R = 0;
-}motorSpeed_t;
-
-typedef struct{
-	int16_t x;
-    int16_t y;
-	int16_t a;
-}positionint_t;
-
-union position_u
-{
-	positionint_t position;
-	uint8_t tab[6];
-};
-
-union uintConv
-{
-	int16_t num;
-	uint8_t tab[2];
-};
