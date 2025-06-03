@@ -113,38 +113,48 @@ int main(void)
 //
 void testMotors(){
     DriveEnable();
-    for (double i = 0.0; i <= 100.0; i++) {
-        usartprintf("%d\n",i);
+    for (double i = 0.0; i <= 100.0; i+=5) {
+        usartprintf("%g\n",i);
 		motorA->SetSpeedSigned(i);
 		motorB->SetSpeedSigned(i);
 		motorC->SetSpeedSigned(i);
-		motorA->PrintValues();
+		//motorA->PrintValues();
 		motorB->PrintValues();
-		motorC->PrintValues();
-        delay_ms(20);
+		//motorC->PrintValues();
+        delay_ms(100);
     }
-    for (double i = 100.0; i > -100.0; i--) {
-        usartprintf("%d\n",i);
+    for (double i = 100.0; i > -100.0; i-=5) {
+        usartprintf("%g\n",i);
 		motorA->SetSpeedSigned(i);
 		motorB->SetSpeedSigned(i);
 		motorC->SetSpeedSigned(i);
-		motorA->PrintValues();
+		//motorA->PrintValues();
 		motorB->PrintValues();
-		motorC->PrintValues();
-        delay_ms(20);
+		//motorC->PrintValues();
+        delay_ms(100);
     }
-    for (double i = -100.0; i <= 0.0; i++) {
-        usartprintf("%d\n",i);
+    for (double i = -100.0; i <= 0.0; i+=5) {
+        usartprintf("%g\n",i);
 		motorA->SetSpeedSigned(i);
 		motorB->SetSpeedSigned(i);
 		motorC->SetSpeedSigned(i);
-		motorA->PrintValues();
+		//motorA->PrintValues();
 		motorB->PrintValues();
-		motorC->PrintValues();
-        delay_ms(20);
+		//motorC->PrintValues();
+        delay_ms(100);
     }
-	DriveDisable();
+
+	
+	motorB->SetSpeedSigned(100);
+	delay_ms(1000);
+	motorB->SetSpeedSigned(0);
 	delay_ms(500);
+	motorB->SetSpeedSigned(-100);
+	delay_ms(1000);
+	motorB->SetSpeedSigned(0);
+
+
+	DriveDisable();
 }
 
 void testloop(sequence* seq) {
