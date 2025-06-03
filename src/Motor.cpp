@@ -164,7 +164,7 @@ void Motor::Brake(bool brake) {
 
 void Motor::SetSpeed(double speed) {
 	speed = CLAMP(speed,0,maxSpeed);
-	int pwmVal = (int)((speed/2.0 + 50) * COEFMULT); //speed/2.0 + 50
+	int pwmVal = (int)((speed/2.0 + 50) * COEFMULT);
 
 	timer_set_oc_value(TIM1, _oc_id, pwmVal);
 }
