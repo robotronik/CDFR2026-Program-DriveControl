@@ -131,7 +131,7 @@ void Motor::Setup(){
 }
 
 void Motor::SetSpeedSigned(double speed) {
-	SetSpeedUnsigned(abs(speed), speed<0);
+	SetSpeedUnsigned(abs(speed), speed<0.0);
 }
 
 void Motor::SetSpeedUnsigned(double speed, bool reverse) {
@@ -148,9 +148,9 @@ void Motor::SetSpeedUnsigned(double speed, bool reverse) {
 
 void Motor::SetDirection(bool reverse) {
 	if (reverse)
-		gpio_set(_port_Direction,_pin_Direction);
-	else
 		gpio_clear(_port_Direction,_pin_Direction);
+	else
+		gpio_set(_port_Direction,_pin_Direction);
 }
 
 void Motor::Brake(bool brake) {
@@ -164,7 +164,7 @@ void Motor::Brake(bool brake) {
 
 void Motor::SetSpeed(double speed) {
 	speed = CLAMP(speed,0,maxSpeed);
-	int pwmVal = (int)(speed * COEFMULT); // (speed/2 + 50)
+	int pwmVal = (int)((speed/2.0 + 50) * COEFMULT); //speed/2.0 + 50
 
 	timer_set_oc_value(TIM1, _oc_id, pwmVal);
 }

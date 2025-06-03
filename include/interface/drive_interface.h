@@ -13,16 +13,34 @@ typedef struct {
 } STRUCT_PACK status_t;
 
 typedef struct {
-    double x = 0.0; // in mm
-    double y = 0.0; // in mm
-    double a = 0.0; // in degrees
+    double x; // in mm
+    double y; // in mm
+    double a; // in degrees
+} vector_t;
+
+typedef struct {
+    double x; // in mm
+    double y; // in mm
+    double a; // in degrees
 } STRUCT_PACK packed_vector_t;
+
+typedef struct {
+    vector_t pos;
+    vector_t vel;
+    vector_t acc;
+} motion_t;
 
 typedef struct {
     packed_vector_t pos;
     packed_vector_t vel;
     packed_vector_t acc;
 } STRUCT_PACK packed_motion_t;
+
+typedef struct {
+    double A;
+    double B;
+    double C;
+} motor_t;
 
 typedef struct {
     double A;
@@ -51,8 +69,18 @@ typedef struct {
 class drive_interface
 {
 public:
-    drive_interface(){};
+    drive_interface();
     ~drive_interface(){};
+
+    // Variables (not synced)
+    vector_t target;
+    vector_t position;
+    vector_t velocity;
+    vector_t acceleration;
+    bool is_enabled;
+    double max_torque;
+
+    // I2C Commands
 
     uint8_t get_version();
 
@@ -86,6 +114,14 @@ inline void pack(uint8_t* buffer, const void* src_struct, size_t size) {
 // Generic unpack: byte buffer -> struct
 inline void unpack(const uint8_t* buffer, void* dest_struct, size_t size) {
     memcpy(dest_struct, buffer, size);
+}
+
+inline void pack_vector_t(uint8_t* buffer, const vector_t* src_struct) {
+    packed_vector_t packed_vector;
+    packed_vector.x = src_struct->x;
+    packed_vector.y = src_struct->y;
+    packed_vector.a = src_struct->a;
+    pack(buffer, &packed_vector, sizeof(packed_vector_t));
 }
 
 /*

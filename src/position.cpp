@@ -2,7 +2,7 @@
 #include "config.h"
 #include "clock.h"
 #include "odometry/OTOS.h"
-#include "AsservissementMath.h" // for mod_angle
+#include "ctrl_math.h" // for mod_angle
 #include "led.h"
 
 position_t global_pos = {0.0, 0.0, 0.0};

@@ -5,12 +5,14 @@
 uint8_t dataRet[64]; // Response buffer
 int dataRetSize = 0;
 
+drive_interface* robotI2cInterface;
+
 void I2CDataSwitch(uint8_t* data, int size)
 {
     uint8_t* dataPtr = data + 1;
     switch (data[0]){
         case CMD_GET_VERSION:
-            pack(dataRet, &robotI2cInterface->get_version(), sizeof(uint8_t));
+            dataRet[0] = I2C_VERSION;
             dataRetSize = sizeof(uint8_t);
         break;
         case CMD_SET_GREEN_LED:
@@ -90,6 +92,6 @@ void I2CDataSwitch(uint8_t* data, int size)
             dataRetSize = 1;
             break;
     }
-    if (dataRetSize > 0)
-        I2CDataSend(dataRet, dataRetSize);
+    //if (dataRetSize > 0)
+        //I2CDataSend(dataRet, dataRetSize);
 }

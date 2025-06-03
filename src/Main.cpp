@@ -22,10 +22,6 @@
 	#define main stm_main
 #endif
 
-// This is needed for the linker to find the __dso_handle symbol
-
-drive_interface* robotI2cInterface = nullptr;
-
 void I2CRecieveData(uint8_t* data, int size) {
     I2CDataSwitch(data, size);
 }
@@ -37,9 +33,6 @@ int main(void)
 {
 	//SETUP
 	clock_setup();
-
-	robotI2cInterface = new drive_interface();
-
 	ledSetup();
     buttonSetup();
 	usartSetup();
@@ -51,6 +44,10 @@ int main(void)
 	//WAIT
 	delay_ms(1000);
 	usartprintf("Start\n");
+
+	while(1){
+		testMotors();
+	}
 
 
 	i2cDevice = new I2CDevice(kDefaultAddress);
@@ -124,9 +121,8 @@ void testMotors(){
 		motorA->PrintValues();
 		motorB->PrintValues();
 		motorC->PrintValues();
-        delay_ms(100);
+        delay_ms(20);
     }
-	delay_ms(500);
     for (double i = 100.0; i > -100.0; i--) {
         usartprintf("%d\n",i);
 		motorA->SetSpeedSigned(i);
@@ -135,9 +131,8 @@ void testMotors(){
 		motorA->PrintValues();
 		motorB->PrintValues();
 		motorC->PrintValues();
-        delay_ms(100);
+        delay_ms(20);
     }
-	delay_ms(500);
     for (double i = -100.0; i <= 0.0; i++) {
         usartprintf("%d\n",i);
 		motorA->SetSpeedSigned(i);
@@ -146,10 +141,10 @@ void testMotors(){
 		motorA->PrintValues();
 		motorB->PrintValues();
 		motorC->PrintValues();
-        delay_ms(100);
+        delay_ms(20);
     }
-	delay_ms(500);
 	DriveDisable();
+	delay_ms(500);
 }
 
 void testloop(sequence* seq) {
