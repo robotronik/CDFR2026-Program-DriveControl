@@ -218,8 +218,8 @@ fault_action_t Motor::GetFault(){
 }
 
 void Motor::PrintValues(){
-    usartprintf(">ADC of %c: %4d /4095\n", name, adc_value);
-    usartprintf(">Current of %c: %g A\n", name, GetCurrent());
+    usartprintf(">ADC_%c:%4d\r\n", name, adc_value);
+    usartprintf(">Current_%c: %g A\r\n", name, GetCurrent());
 }
 
 void setupDriveGPIO(void){

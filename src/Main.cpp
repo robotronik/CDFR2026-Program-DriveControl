@@ -41,18 +41,17 @@ int main(void)
 	setCallbackReceive(I2CRecieveData);
 	setupDeviceI2C();
 
-	//WAIT
-	delay_ms(1000);
+	delay_ms(100);
 	usartprintf("Start\n");
-
-	while(1){
-		testMotors();
-	}
 
 
 	i2cDevice = new I2CDevice(kDefaultAddress);
 	otos = new OTOS(i2cDevice);
 
+	wheelA =  new Wheel(DISTANCE_WHEEL,180, DIAMETER_WHEEL, motorA);
+	wheelB =  new Wheel(DISTANCE_WHEEL, 60, DIAMETER_WHEEL, motorB);
+	wheelC =  new Wheel(DISTANCE_WHEEL,-60, DIAMETER_WHEEL, motorC);
+	
 	// Check the connection with the OTOS
 	while (otos->begin() != ret_OK) {
 		usartprintf("OTOS not connected\n");
@@ -62,13 +61,9 @@ int main(void)
 	usartprintf("OTOS connected\n");
 	RedLED_Clear();
 
-	wheelA =  new Wheel(DISTANCE_WHEEL,180, DIAMETER_WHEEL, motorA);
-	wheelB =  new Wheel(DISTANCE_WHEEL, 60, DIAMETER_WHEEL, motorB);
-	wheelC =  new Wheel(DISTANCE_WHEEL,-60, DIAMETER_WHEEL, motorC);
-	
 	// Reset the position of the robot
 	setPosition(0, 0, 0);
-
+	setTarget(0, 0, 0);
 
 //
 //	Main Loop of the robot
@@ -95,7 +90,7 @@ int main(void)
 
 		// Write the position to debug console
         dbg.interval([](){
-			usartprintf("x : %1lf mm, y : %1lf mm, a : %1lf degs\n", global_pos.x, global_pos.y, global_pos.a);;
+			usartprintf(">x:%1lf,y:%1lf,a:%1lf\r\n", global_pos.x, global_pos.y, global_pos.a);;
 		},100);
 
 		//BLINK LED
@@ -118,9 +113,9 @@ void testMotors(){
 		motorA->SetSpeedSigned(i);
 		motorB->SetSpeedSigned(i);
 		motorC->SetSpeedSigned(i);
-		//motorA->PrintValues();
+		motorA->PrintValues();
 		motorB->PrintValues();
-		//motorC->PrintValues();
+		motorC->PrintValues();
         delay_ms(100);
     }
     for (double i = 100.0; i > -100.0; i-=5) {
@@ -128,9 +123,9 @@ void testMotors(){
 		motorA->SetSpeedSigned(i);
 		motorB->SetSpeedSigned(i);
 		motorC->SetSpeedSigned(i);
-		//motorA->PrintValues();
+		motorA->PrintValues();
 		motorB->PrintValues();
-		//motorC->PrintValues();
+		motorC->PrintValues();
         delay_ms(100);
     }
     for (double i = -100.0; i <= 0.0; i+=5) {
@@ -138,9 +133,9 @@ void testMotors(){
 		motorA->SetSpeedSigned(i);
 		motorB->SetSpeedSigned(i);
 		motorC->SetSpeedSigned(i);
-		//motorA->PrintValues();
+		motorA->PrintValues();
 		motorB->PrintValues();
-		//motorC->PrintValues();
+		motorC->PrintValues();
         delay_ms(100);
     }
 
@@ -165,4 +160,8 @@ void testloop(sequence* seq) {
         robotI2cInterface->enable();
 		robotI2cInterface->set_target({200,0,0});
 	},0);
+
+	seq->delay([](){
+		robotI2cInterface->set_target({0,0,0});
+	},2000);
 }
