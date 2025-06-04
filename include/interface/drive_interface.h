@@ -13,39 +13,27 @@ typedef struct {
 } STRUCT_PACK status_t;
 
 typedef struct {
-    double x; // in mm
-    double y; // in mm
-    double a; // in degrees
-} vector_t;
+    double x, y, a; // mm and degrees
+} position_t;
 
 typedef struct {
-    double x; // in mm
-    double y; // in mm
-    double a; // in degrees
-} STRUCT_PACK packed_vector_t;
+    double x, y, a; // mm and degrees
+} STRUCT_PACK packed_position_t;
 
 typedef struct {
-    vector_t pos;
-    vector_t vel;
-    vector_t acc;
+    position_t pos, vel, acc;
 } motion_t;
 
 typedef struct {
-    packed_vector_t pos;
-    packed_vector_t vel;
-    packed_vector_t acc;
+    packed_position_t pos, vel, acc;
 } STRUCT_PACK packed_motion_t;
 
 typedef struct {
-    double A;
-    double B;
-    double C;
+    double A, B, C;
 } motor_t;
 
 typedef struct {
-    double A;
-    double B;
-    double C;
+    double A, B, C;
 } STRUCT_PACK packed_motor_t;
 
 // Increment this version number when the I2C protocol changes.
@@ -73,10 +61,10 @@ public:
     ~drive_interface(){};
 
     // Variables (not synced)
-    vector_t target;
-    vector_t position;
-    vector_t velocity;
-    vector_t acceleration;
+    position_t target;
+    position_t position;
+    position_t velocity;
+    position_t acceleration;
     bool is_enabled;
     double max_torque;
 
@@ -88,10 +76,10 @@ public:
     void set_red_led(bool status);
 
     packed_motion_t get_motion();
-    void set_coordinates(packed_vector_t pos);
+    void set_coordinates(packed_position_t pos);
 
-    packed_vector_t get_target();
-    void set_target(packed_vector_t pos);
+    packed_position_t get_target();
+    void set_target(packed_position_t pos);
 
     void disable();
     void enable();
@@ -116,12 +104,12 @@ inline void unpack(const uint8_t* buffer, void* dest_struct, size_t size) {
     memcpy(dest_struct, buffer, size);
 }
 
-inline void pack_vector_t(uint8_t* buffer, const vector_t* src_struct) {
-    packed_vector_t packed_vector;
+inline void pack_vector_t(uint8_t* buffer, const position_t* src_struct) {
+    packed_position_t packed_vector;
     packed_vector.x = src_struct->x;
     packed_vector.y = src_struct->y;
     packed_vector.a = src_struct->a;
-    pack(buffer, &packed_vector, sizeof(packed_vector_t));
+    pack(buffer, &packed_vector, sizeof(packed_position_t));
 }
 
 /*
