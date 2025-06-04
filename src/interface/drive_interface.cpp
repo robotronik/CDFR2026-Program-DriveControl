@@ -47,7 +47,7 @@ packed_motion_t drive_interface::get_motion() {
     return motion;
 }
 
-void drive_interface::set_coordinates(packed_vector_t pos) {
+void drive_interface::set_coordinates(packed_position_t pos) {
     position_t position;
     position.x = pos.x;
     position.y = pos.y;
@@ -55,15 +55,15 @@ void drive_interface::set_coordinates(packed_vector_t pos) {
     setPosition(position);
 }
 
-packed_vector_t drive_interface::get_target() {
-    packed_vector_t packed_global_target;
+packed_position_t drive_interface::get_target() {
+    packed_position_t packed_global_target;
     packed_global_target.x = global_target.x;
     packed_global_target.y = global_target.y;
     packed_global_target.a = global_target.a;
     return (packed_global_target);
 }
 
-void drive_interface::set_target(packed_vector_t pos) {
+void drive_interface::set_target(packed_position_t pos) {
     position_t position;
     position.x = pos.x;
     position.y = pos.y;

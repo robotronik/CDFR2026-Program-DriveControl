@@ -30,22 +30,22 @@ void I2CDataSwitch(uint8_t* data, int size)
             break;
         case CMD_SET_COORDINATES:
             {
-                packed_vector_t pos;
-                unpack(dataPtr, &pos, sizeof(packed_vector_t));
+                packed_position_t pos;
+                unpack(dataPtr, &pos, sizeof(packed_position_t));
                 robotI2cInterface->set_coordinates(pos);
             }
             break;
         case CMD_GET_TARGET:
             {
-                packed_vector_t target = robotI2cInterface->get_target();
-                pack(dataRet, &target, sizeof(packed_vector_t));
-                dataRetSize = sizeof(packed_vector_t);
+                packed_position_t target = robotI2cInterface->get_target();
+                pack(dataRet, &target, sizeof(packed_position_t));
+                dataRetSize = sizeof(packed_position_t);
             }
             break;
         case CMD_SET_TARGET:
             {
-                packed_vector_t pos;
-                unpack(dataPtr, &pos, sizeof(packed_vector_t));
+                packed_position_t pos;
+                unpack(dataPtr, &pos, sizeof(packed_position_t));
                 robotI2cInterface->set_target(pos);
             }
             break;

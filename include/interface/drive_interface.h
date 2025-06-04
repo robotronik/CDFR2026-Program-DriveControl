@@ -112,6 +112,22 @@ inline void pack_vector_t(uint8_t* buffer, const position_t* src_struct) {
     pack(buffer, &packed_vector, sizeof(packed_position_t));
 }
 
+inline position_t convertPackedToPosition(packed_position_t packedPos) {
+    position_t pos;
+    pos.x = packedPos.x;
+    pos.y = packedPos.y;
+    pos.a = packedPos.a;
+    return pos;
+}
+
+inline packed_position_t convertPositionToPacked(position_t pos) {
+    packed_position_t packedPos;
+    packedPos.x = pos.x;
+    packedPos.y = pos.y;
+    packedPos.a = pos.a;
+    return packedPos;
+}
+
 /*
 
     packed_motion_t motion = {
