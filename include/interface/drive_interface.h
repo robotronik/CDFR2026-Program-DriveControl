@@ -60,14 +60,6 @@ public:
     drive_interface();
     ~drive_interface(){};
 
-    // Variables (not synced)
-    position_t target;
-    position_t position;
-    position_t velocity;
-    position_t acceleration;
-    bool is_enabled;
-    double max_torque;
-
     // I2C Commands
 
     uint8_t get_version();
