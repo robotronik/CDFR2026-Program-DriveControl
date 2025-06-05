@@ -5,17 +5,12 @@
 #include "I2C.h"
 
 
-drive_interface::drive_interface(){
-    target = {0,0,0};
-    position = {0,0,0};
-    velocity = {0,0,0};
-    acceleration = {0,0,0};
-    is_enabled = false;
-    max_torque = 2.0;
-}
+drive_interface::drive_interface(){}
+
+drive_interface::~drive_interface(){}
 
 uint8_t drive_interface::get_version() {
-    return I2C_VERSION;
+    return DRIVE_I2C_VERSION;
 }
 
 void drive_interface::set_green_led(bool status) {
