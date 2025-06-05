@@ -3,8 +3,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define ADDRI2CBASEROULANTE 42
-
 #define BUFFERSIZE 256
 
 typedef enum{

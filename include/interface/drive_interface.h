@@ -37,7 +37,8 @@ typedef struct {
 } STRUCT_PACK packed_motor_t;
 
 // Increment this version number when the I2C protocol changes.
-#define I2C_VERSION 0x01
+#define DRIVE_I2C_VERSION 0x01
+#define DRIVE_I2C_ADRESS 0x10
 
 #define CMD_GET_VERSION 0x01
 #define CMD_SET_GREEN_LED 0x11
@@ -61,7 +62,6 @@ public:
     ~drive_interface(){};
 
     // I2C Commands
-
     uint8_t get_version();
 
     void set_green_led(bool status);
