@@ -17,15 +17,15 @@ typedef struct {
 } position_t;
 
 typedef struct {
-    double x, y, a; // mm and degrees
+    float x, y, a; // mm and degrees
 } STRUCT_PACK packed_position_t;
 
 typedef struct {
-    position_t pos, vel, acc;
+    position_t pos, vel;
 } motion_t;
 
 typedef struct {
-    packed_position_t pos, vel, acc;
+    packed_position_t pos, vel;
 } STRUCT_PACK packed_motion_t;
 
 typedef struct {
@@ -33,11 +33,11 @@ typedef struct {
 } motor_t;
 
 typedef struct {
-    double A, B, C;
+    float A, B, C;
 } STRUCT_PACK packed_motor_t;
 
 // Increment this version number when the I2C protocol changes.
-#define DRIVE_I2C_VERSION 0x01
+#define DRIVE_I2C_VERSION 0x02
 #define DRIVE_I2C_ADRESS 42
 
 #define CMD_GET_VERSION 0x01

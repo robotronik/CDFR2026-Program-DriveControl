@@ -36,9 +36,6 @@ packed_motion_t drive_interface::get_motion() {
     motion.vel.x = global_vel.x;
     motion.vel.y = global_vel.y;
     motion.vel.a = global_vel.a;
-    motion.acc.x = global_acc.x;
-    motion.acc.y = global_acc.y;
-    motion.acc.a = global_acc.a;
     return motion;
 }
 
