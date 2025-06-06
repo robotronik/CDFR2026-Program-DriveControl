@@ -92,6 +92,9 @@ void I2CDataSwitch(uint8_t* data, int size)
             dataRetSize = 1;
             break;
     }
-    //if (dataRetSize > 0)
-        //I2CDataSend(dataRet, dataRetSize);
+    
+    // Prepare the response
+    if (dataRetSize > 0) {
+        I2CSetBuffer(dataRet, dataRetSize); // Send the response back
+    }
 }
