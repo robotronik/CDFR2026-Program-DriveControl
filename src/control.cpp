@@ -20,8 +20,8 @@ void updateWheels()
     errDistance = sqrt(dx * dx + dy * dy);
     errHeading = mod_angle(global_target.a - global_pos.a);
 
-    const double kP_linear = 3.0;   // Gain for linear speed (mm/s per mm error)
-    const double kP_angular = 3.0;  // Gain for angular speed (deg/s per deg error)
+    const double kP_linear = 10.0;   // Gain for linear speed (mm/s per mm error)
+    const double kP_angular = 10.0;  // Gain for angular speed (deg/s per deg error)
     
     // Compute commanded speeds.
     double commandedLinear = kP_linear * errDistance; // mm/s

@@ -148,9 +148,9 @@ void Motor::SetSpeedUnsigned(double speed, bool reverse) {
 
 void Motor::SetDirection(bool reverse) {
 	if (reverse)
-		gpio_clear(_port_Direction,_pin_Direction);
-	else
 		gpio_set(_port_Direction,_pin_Direction);
+	else
+		gpio_clear(_port_Direction,_pin_Direction);
 }
 
 void Motor::Brake(bool brake) {
@@ -218,7 +218,7 @@ fault_action_t Motor::GetFault(){
 }
 
 void Motor::PrintValues(){
-    usartprintf(">ADC_%c:%4d\r\n", name, adc_value);
+    //usartprintf(">ADC_%c:%4d\r\n", name, adc_value);
     usartprintf(">Current_%c: %g A\r\n", name, GetCurrent());
 }
 

@@ -62,8 +62,11 @@ int main(void)
 	RedLED_Clear();
 
 	// Reset the position of the robot
+	otos->calibrateImu();
+
 	setPosition(0, 0, 0);
 	setTarget(0, 0, 0);
+
 
 //
 //	Main Loop of the robot
@@ -148,8 +151,7 @@ void testMotors(){
 	delay_ms(1000);
 	motorB->SetSpeedSigned(0);
 
-
-	DriveDisable();
+	//DriveDisable();
 }
 
 void testloop(sequence* seq) {
