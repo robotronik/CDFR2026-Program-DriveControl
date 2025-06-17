@@ -116,5 +116,5 @@
 #define port_I2CSda				GPIOB
 
 
-#define DISTANCE_WHEEL 100.0
+#define DISTANCE_WHEEL 160.0
 #define DIAMETER_WHEEL 60.0

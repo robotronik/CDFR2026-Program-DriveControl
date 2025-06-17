@@ -41,17 +41,19 @@ int main(void)
 	setCallbackReceive(I2CRecieveData);
 	setupDeviceI2C();
 
-	delay_ms(100);
 	usartprintf("Start\n");
+	delay_ms(100);
 
 
 	i2cDevice = new I2CDevice(kDefaultAddress);
 	otos = new OTOS(i2cDevice);
 
 	wheelA =  new Wheel(DISTANCE_WHEEL,180, DIAMETER_WHEEL, motorA);
-	wheelB =  new Wheel(DISTANCE_WHEEL, 60, DIAMETER_WHEEL, motorB);
-	wheelC =  new Wheel(DISTANCE_WHEEL,-60, DIAMETER_WHEEL, motorC);
+	wheelB =  new Wheel(DISTANCE_WHEEL,-60, DIAMETER_WHEEL, motorB);
+	wheelC =  new Wheel(DISTANCE_WHEEL, 60, DIAMETER_WHEEL, motorC);
 	
+	usartprintf("Looking for OTOS...\n");
+
 	// Check the connection with the OTOS
 	while (otos->begin() != ret_OK) {
 		usartprintf("OTOS not connected\n");
@@ -66,6 +68,9 @@ int main(void)
 
 	setPosition(0, 0, 0);
 	setTarget(0, 0, 0);
+	
+	
+    DriveEnable();
 
 
 //
@@ -93,7 +98,7 @@ int main(void)
 
 		// Write the position to debug console
         dbg.interval([](){
-			usartprintf(">x:%1lf,y:%1lf,a:%1lf\r\n", global_pos.x, global_pos.y, global_pos.a);;
+			usartprintf(">x:%.1lf,y:%.1lf,a:%.1lf\r\n", global_pos.x, global_pos.y, global_pos.a);;
 		},100);
 
 		//BLINK LED

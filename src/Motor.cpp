@@ -163,6 +163,13 @@ void Motor::Brake(bool brake) {
 
 
 void Motor::SetSpeed(double speed) {
+	const double minSpeed = 23.0;
+	if (speed > 4.0 && speed < minSpeed) {
+		speed = minSpeed;
+	}
+	else if (speed <= 4.0) {
+		speed = 0;
+	}
 	speed = CLAMP(speed,0,maxSpeed);
 	int pwmVal = (int)((speed/2.0 + 50) * COEFMULT);
 
