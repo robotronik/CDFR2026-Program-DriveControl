@@ -15,7 +15,7 @@
 #include "odometry/OTOS.h"
 
 // If debug is define, the code will be compiled with debug information
-// #define MUTE_UART
+#define MUTE_UART
 
 #ifdef SIMULATION
 	#include "hardware_interface.h"
@@ -52,6 +52,8 @@ int main(void)
 	wheelB =  new Wheel(DISTANCE_WHEEL,-60, DIAMETER_WHEEL, motorB);
 	wheelC =  new Wheel(DISTANCE_WHEEL, 60, DIAMETER_WHEEL, motorC);
 	
+	RedLED_Toggle();
+	
 	usartprintf("Looking for OTOS...\n");
 
 	// Check the connection with the OTOS
@@ -69,10 +71,7 @@ int main(void)
 	setPosition(0, 0, 0);
 	setTarget(0, 0, 0);
 	
-	
-    DriveEnable();
-
-
+    //DriveEnable();
 //
 //	Main Loop of the robot
 //
@@ -82,6 +81,8 @@ int main(void)
     bool isDebug = false;
 
 	while (1) {
+		uint32_t start_time = get_uptime_us();
+
 		updatePositionData();
 		updateWheels();
 
@@ -105,6 +106,8 @@ int main(void)
 		ledToggleSeq.interval([](){
 			GreenLED_Toggle();
 		},750);
+
+		while (get_uptime_us() - start_time < 5000); // 200Hz loop
 	}
 
 	return 0;

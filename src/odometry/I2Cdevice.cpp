@@ -15,7 +15,7 @@ void setupDeviceI2C(){
 	rcc_periph_clock_enable(RCC_GPIOA);
 	rcc_periph_clock_enable(RCC_GPIOC);
 	//rcc_periph_clock_enable(RCC_GPIOH);
-	//rcc_set_i2c_clock_hsi(i2c);
+	//rcc_set_i2c_clock_hsi(i2c); //TODO might need to enable this for HSI clock
 
 	gpio_mode_setup(port_OdoClk, GPIO_MODE_AF, GPIO_PUPD_NONE, pin_OdoClk);
 	gpio_mode_setup(port_OdoSda, GPIO_MODE_AF, GPIO_PUPD_NONE, pin_OdoSda);
@@ -28,7 +28,7 @@ void setupDeviceI2C(){
 	rcc_periph_clock_enable(rcc_i2c);
 	i2c_peripheral_disable(i2c);
 	/* HSI is at 8Mhz */
-	i2c_set_speed(i2c, i2c_speed_sm_100k, 8);
+	i2c_set_speed(i2c, i2c_speed_sm_100k, 42);
 	//addressing mode
 	//i2c_set_7bit_addr_mode(i2c);
 	i2c_set_standard_mode(i2c);

@@ -7,6 +7,8 @@ int dataRetSize = 0;
 
 drive_interface* robotI2cInterface;
 
+#include "uart.h" // TODO remove temporary
+
 void I2CDataSwitch(uint8_t* data, int size)
 {
     uint8_t* dataPtr = data + 1;
@@ -96,5 +98,5 @@ void I2CDataSwitch(uint8_t* data, int size)
     // Prepare the response
     if (dataRetSize > 0) {
         I2CSetBuffer(dataRet, dataRetSize); // Send the response back
-    }
+    }    
 }
