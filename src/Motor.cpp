@@ -163,11 +163,11 @@ void Motor::Brake(bool brake) {
 
 
 void Motor::SetSpeed(double speed) {
-	const double minSpeed = 23.0;
-	if (speed > 4.0 && speed < minSpeed) {
+	const double minSpeed = 19.0;
+	if (speed > 7.0 && speed < minSpeed) {
 		speed = minSpeed;
 	}
-	else if (speed <= 4.0) {
+	else if (speed <= 7.0) {
 		speed = 0;
 	}
 	speed = CLAMP(speed,0,maxSpeed);
