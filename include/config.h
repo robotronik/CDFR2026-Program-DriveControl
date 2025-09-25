@@ -61,8 +61,8 @@
 //PIN and Port to control MotorC
 #define pin_SpeedControlC	GPIO1
 #define port_SpeedControlC		GPIOB
-#define pin_BrakeC 			GPIO15
-#define port_BrakeC 			GPIOB
+#define pin_BrakeC 			GPIO12
+#define port_BrakeC 			GPIOC
 #define pin_DirectionC 		GPIO11
 #define port_DirectionC 		GPIOC
 #define pin_ESFC 			GPIO4

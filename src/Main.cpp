@@ -51,10 +51,6 @@ int main(void)
 	wheelA =  new Wheel(DISTANCE_WHEEL,180, DIAMETER_WHEEL, motorA);
 	wheelB =  new Wheel(DISTANCE_WHEEL,-60, DIAMETER_WHEEL, motorB);
 	wheelC =  new Wheel(DISTANCE_WHEEL, 60, DIAMETER_WHEEL, motorC);
-
-	usartprintf("Starting tests\n");
-	DriveEnable();
-	testMotors();
 	
 	
 	usartprintf("Looking for OTOS...\n");
@@ -77,7 +73,6 @@ int main(void)
 	setPosition(0, 0, 0);
 	setTarget(0, 0, 0);
 	
-    //DriveEnable();
 //
 //	Main Loop of the robot
 //
@@ -85,12 +80,6 @@ int main(void)
     sequence mySeq;
     sequence dbg;
     bool isDebug = false;
-
-	// TODO Remove this after testing
-	if (otos->setLinearScalar(1.05f) != ret_OK){
-		RedLED_Set();
-		while(1);
-	}
 
 	while (1) {
 		uint32_t start_time = get_uptime_us();
@@ -162,33 +151,6 @@ void testMotors(){
 		motorC->PrintValues();
         delay_ms(100);
     }
-
-	
-	delay_ms(500);
-	motorC->SetSpeedSigned(100);
-	delay_ms(500);
-	motorC->SetSpeedSigned(0);
-	delay_ms(300);
-	motorC->SetSpeedSigned(-100);
-	delay_ms(500);
-	motorC->SetSpeedSigned(0);
-	delay_ms(300);
-	motorC->SetSpeedSigned(100);
-	delay_ms(500);
-	motorC->SetSpeedSigned(0);
-	delay_ms(300);
-	motorC->SetSpeedSigned(-100);
-	delay_ms(500);
-	motorC->SetSpeedSigned(0);
-	delay_ms(300);
-	motorC->SetSpeedSigned(100);
-	delay_ms(500);
-	motorC->SetSpeedSigned(0);
-	delay_ms(300);
-	motorC->SetSpeedSigned(-100);
-	delay_ms(500);
-	motorC->SetSpeedSigned(0);
-	delay_ms(300);
 
 	DriveDisable();
 }
