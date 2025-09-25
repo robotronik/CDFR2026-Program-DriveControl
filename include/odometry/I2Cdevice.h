@@ -8,6 +8,7 @@ class I2CDevice
 {
     public:
         I2CDevice(uint8_t address = 0x17);
+        int ping();
         int readRegisters(uint8_t reg, uint8_t *data, uint8_t size, int &bytesRead);
         int readRegister(uint8_t reg, uint8_t &data);
         int writeRegisters(uint8_t reg, uint8_t *data, uint8_t size);

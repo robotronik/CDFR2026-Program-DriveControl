@@ -27,6 +27,12 @@ return_t OTOS::begin()
 return_t OTOS::isConnected()
 {
     // Read the product ID
+    /*
+    int err = _commBus->ping();
+    if (err != 0)
+        return ret_FAIL;
+        */
+
     uint8_t prodId;
     int err = _commBus->readRegister(kRegProductId, prodId);
     if (err != 0)
@@ -178,9 +184,20 @@ return_t OTOS::setLinearScalar(float scalar)
 
     // Convert to integer, multiples of 0.1% (+0.5 to round instead of truncate)
     uint8_t rawScalar = (int8_t)((scalar - 1.0f) * 1000 + 0.5f);
+    if (_commBus->writeRegister(kRegScalarLinear, rawScalar) != 0)
+        return ret_FAIL;
+    
+    delay_ms(5);
+
+    uint8_t verify;
+    if (_commBus->readRegister(kRegScalarLinear, verify) != 0)
+        return ret_FAIL;
+    
+    if (verify != rawScalar)
+        return ret_FAIL;
 
     // Write the scalar to the device
-    return _commBus->writeRegister(kRegScalarLinear, rawScalar) == 0 ? ret_OK : ret_FAIL;
+    return ret_OK;
 }
 
 return_t OTOS::getAngularScalar(float &scalar)

@@ -4,6 +4,7 @@
 #include "odometry/OTOS.h"
 #include "ctrl_math.h" // for mod_angle
 #include "led.h"
+#include "clock.h"
 
 position_t global_pos = {0.0, 0.0, 0.0};
 position_t global_vel = {0.0, 0.0, 0.0};
@@ -20,6 +21,7 @@ void updatePositionData(){
         global_pos = newPosition;
         needChangePos = false;
         otos->setPosition(global_pos);
+        delay_ms(5); // Give the OTOS time to process the new position
     }
 
     global_target = newTarget;

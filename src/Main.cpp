@@ -33,16 +33,16 @@ int main(void)
 {
 	//SETUP
 	clock_setup();
+	setupDeviceI2C();
 	ledSetup();
     buttonSetup();
 	usartSetup();
 	DriveSetup();
 	i2c_setup();
 	setCallbackReceive(I2CRecieveData);
-	setupDeviceI2C();
 
 	usartprintf("Start\n");
-	delay_ms(100);
+	delay_ms(200);
 
 
 	i2cDevice = new I2CDevice(kDefaultAddress);
@@ -51,19 +51,25 @@ int main(void)
 	wheelA =  new Wheel(DISTANCE_WHEEL,180, DIAMETER_WHEEL, motorA);
 	wheelB =  new Wheel(DISTANCE_WHEEL,-60, DIAMETER_WHEEL, motorB);
 	wheelC =  new Wheel(DISTANCE_WHEEL, 60, DIAMETER_WHEEL, motorC);
+
+	usartprintf("Starting tests\n");
+	DriveEnable();
+	testMotors();
 	
-	RedLED_Toggle();
 	
 	usartprintf("Looking for OTOS...\n");
+	RedLED_Toggle();
 
 	// Check the connection with the OTOS
 	while (otos->begin() != ret_OK) {
 		usartprintf("OTOS not connected\n");
 		RedLED_Toggle();
-		delay_ms(200);
+		delay_ms(200); 
 	}
-	usartprintf("OTOS connected\n");
 	RedLED_Clear();
+	usartprintf("OTOS connected\n");
+	
+	delay_ms(100); 
 
 	// Reset the position of the robot
 	otos->calibrateImu();
@@ -79,6 +85,12 @@ int main(void)
     sequence mySeq;
     sequence dbg;
     bool isDebug = false;
+
+	// TODO Remove this after testing
+	if (otos->setLinearScalar(1.05f) != ret_OK){
+		RedLED_Set();
+		while(1);
+	}
 
 	while (1) {
 		uint32_t start_time = get_uptime_us();
@@ -105,7 +117,7 @@ int main(void)
 		//BLINK LED
 		ledToggleSeq.interval([](){
 			GreenLED_Toggle();
-		},750);
+		},250);
 
 		while (get_uptime_us() - start_time < 5000); // 200Hz loop
 	}
@@ -119,6 +131,7 @@ int main(void)
 //
 void testMotors(){
     DriveEnable();
+	ResetDrive();
     for (double i = 0.0; i <= 100.0; i+=5) {
         usartprintf("%g\n",i);
 		motorA->SetSpeedSigned(i);
@@ -151,15 +164,33 @@ void testMotors(){
     }
 
 	
-	motorB->SetSpeedSigned(100);
-	delay_ms(1000);
-	motorB->SetSpeedSigned(0);
 	delay_ms(500);
-	motorB->SetSpeedSigned(-100);
-	delay_ms(1000);
-	motorB->SetSpeedSigned(0);
+	motorC->SetSpeedSigned(100);
+	delay_ms(500);
+	motorC->SetSpeedSigned(0);
+	delay_ms(300);
+	motorC->SetSpeedSigned(-100);
+	delay_ms(500);
+	motorC->SetSpeedSigned(0);
+	delay_ms(300);
+	motorC->SetSpeedSigned(100);
+	delay_ms(500);
+	motorC->SetSpeedSigned(0);
+	delay_ms(300);
+	motorC->SetSpeedSigned(-100);
+	delay_ms(500);
+	motorC->SetSpeedSigned(0);
+	delay_ms(300);
+	motorC->SetSpeedSigned(100);
+	delay_ms(500);
+	motorC->SetSpeedSigned(0);
+	delay_ms(300);
+	motorC->SetSpeedSigned(-100);
+	delay_ms(500);
+	motorC->SetSpeedSigned(0);
+	delay_ms(300);
 
-	//DriveDisable();
+	DriveDisable();
 }
 
 void testloop(sequence* seq) {
