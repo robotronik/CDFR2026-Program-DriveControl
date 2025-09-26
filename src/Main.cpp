@@ -14,14 +14,6 @@
 #include "odometry/I2Cdevice.h"
 #include "odometry/OTOS.h"
 
-// If debug is define, the code will be compiled with debug information
-#define MUTE_UART
-
-#ifdef SIMULATION
-	#include "hardware_interface.h"
-	#define main stm_main
-#endif
-
 void I2CRecieveData(uint8_t* data, int size) {
     I2CDataSwitch(data, size);
 }
@@ -72,6 +64,8 @@ int main(void)
 
 	setPosition(0, 0, 0);
 	setTarget(0, 0, 0);
+
+	DriveEnable();
 	
 //
 //	Main Loop of the robot
