@@ -2,7 +2,7 @@
 
 ## Description
 
-This program is designed for the CDFR control board. This board supports motor control, odometry for position sensing, closed-loop control, and I2C communication. The program is intended to run on an STM32F401RE.
+This program is designed for the CDFR control board. This board supports motor control, odometry for position sensing, closed-loop control, and I2C communication. The program is intended to run on an STM32F401RC.
 
 ## I2C (Slave mode only)
 

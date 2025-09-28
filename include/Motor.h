@@ -70,10 +70,18 @@ public:
     // Returns the current in A
     double GetCurrent();
 
+    // Returns the speed in revolutions per second
+    double GetSpeed(){ return speed_rps; }
+
+    // Returns the speed in percent of max speed
+    double GetSpeedPercent(){ return (speed_rps / 6.0 * 100.0); }
+
     fault_action_t GetFault();
 
     // Print useful values
     void PrintValues();
+
+    void IncrementTacho();
 
 private:
 
@@ -97,6 +105,8 @@ private:
     int maxTorque = 4096;
     int maxSpeed = 100;
     bool doesLimitTorque = false;
+    uint32_t tacho_timestamp = 0;
+    double speed_rps = 0.0; // speed in revolutions per second
 
     // Periferals
 

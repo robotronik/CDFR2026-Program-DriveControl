@@ -43,8 +43,7 @@ int main(void)
 	wheelA =  new Wheel(DISTANCE_WHEEL,180, DIAMETER_WHEEL, motorA);
 	wheelB =  new Wheel(DISTANCE_WHEEL,-60, DIAMETER_WHEEL, motorB);
 	wheelC =  new Wheel(DISTANCE_WHEEL, 60, DIAMETER_WHEEL, motorC);
-	
-	
+
 	usartprintf("Looking for OTOS...\n");
 	RedLED_Toggle();
 
@@ -65,7 +64,8 @@ int main(void)
 	setPosition(0, 0, 0);
 	setTarget(0, 0, 0);
 
-	DriveEnable();
+	// TODO Remove fo testing
+    DriveEnable();
 	
 //
 //	Main Loop of the robot
@@ -76,7 +76,7 @@ int main(void)
     bool isDebug = false;
 
 	while (1) {
-		uint32_t start_time = get_uptime_us();
+		uint32_t start_time = micros();
 
 		updatePositionData();
 		updateWheels();
@@ -94,7 +94,8 @@ int main(void)
 
 		// Write the position to debug console
         dbg.interval([](){
-			usartprintf(">x:%.1lf,y:%.1lf,a:%.1lf\r\n", global_pos.x, global_pos.y, global_pos.a);;
+			usartprintf(">x:%.1lf,y:%.1lf,a:%.1lf\r\n", global_pos.x, global_pos.y, global_pos.a);
+			usartprintf(">tx:%.1lf,ty:%.1lf,ta:%.1lf\r\n", global_target.x, global_target.y, global_target.a);
 		},100);
 
 		//BLINK LED
@@ -102,7 +103,7 @@ int main(void)
 			GreenLED_Toggle();
 		},250);
 
-		while (get_uptime_us() - start_time < 5000); // 200Hz loop
+		while (micros() - start_time < 4000); // 250Hz loop
 	}
 
 	return 0;
@@ -115,7 +116,8 @@ int main(void)
 void testMotors(){
     DriveEnable();
 	ResetDrive();
-    for (double i = 0.0; i <= 100.0; i+=5) {
+
+    for (double i = 0.0; i <= 100.0; i+=0.1) {
         usartprintf("%g\n",i);
 		motorA->SetSpeedSigned(i);
 		motorB->SetSpeedSigned(i);
@@ -123,9 +125,9 @@ void testMotors(){
 		motorA->PrintValues();
 		motorB->PrintValues();
 		motorC->PrintValues();
-        delay_ms(100);
+        delay_ms(5);
     }
-    for (double i = 100.0; i > -100.0; i-=5) {
+    for (double i = 100.0; i > -100.0; i-=0.1) {
         usartprintf("%g\n",i);
 		motorA->SetSpeedSigned(i);
 		motorB->SetSpeedSigned(i);
@@ -133,9 +135,9 @@ void testMotors(){
 		motorA->PrintValues();
 		motorB->PrintValues();
 		motorC->PrintValues();
-        delay_ms(100);
+        delay_ms(5);
     }
-    for (double i = -100.0; i <= 0.0; i+=5) {
+    for (double i = -100.0; i <= 0.0; i+=0.1) {
         usartprintf("%g\n",i);
 		motorA->SetSpeedSigned(i);
 		motorB->SetSpeedSigned(i);
@@ -143,7 +145,7 @@ void testMotors(){
 		motorA->PrintValues();
 		motorB->PrintValues();
 		motorC->PrintValues();
-        delay_ms(100);
+        delay_ms(5);
     }
 
 	DriveDisable();

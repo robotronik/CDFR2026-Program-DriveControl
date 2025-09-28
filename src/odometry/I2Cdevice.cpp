@@ -28,7 +28,7 @@ void setupDeviceI2C(){
 	gpio_set_af(port_OdoClk, GPIO_AF4, pin_OdoClk);
 	gpio_set_af(port_OdoSda, GPIO_AF4, pin_OdoSda);
 	
-	/* HSI is at 8Mhz */
+	/* HSI is at 82Mhz */
 	i2c_set_speed(i2c, i2c_speed_sm_100k, 42);
 	//addressing mode
 	//i2c_set_7bit_addr_mode(i2c);

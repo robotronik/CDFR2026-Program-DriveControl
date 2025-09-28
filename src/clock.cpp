@@ -7,6 +7,7 @@
     #include <libopencm3/cm3/systick.h>
     #include <libopencm3/stm32/rcc.h>
     #include <libopencm3/cm3/nvic.h>
+    #include <libopencm3/stm32/timer.h>
 #endif
 
 void clock_setup(){
@@ -22,6 +23,12 @@ void clock_setup(){
 
   //enable global iterrupts
   nvic_enable_irq(NVIC_SYSTICK_IRQ);
+
+  rcc_periph_clock_enable(RCC_TIM2);
+  //timer_set_prescaler(TIM2, 83); // 1 tick = 1 µs
+  timer_set_period(TIM2, 0xFFFFFFFF);
+  timer_enable_counter(TIM2);
+
 }
 
 volatile uint32_t systicks = 0;
@@ -36,7 +43,12 @@ uint32_t get_uptime_ms(){
 }
 
 uint32_t get_uptime_us(){
+  // TODO Do no use, this is not accurate, use micros() instead
   return systicks*1000 + systick_get_value()/MICROS_SYSTICK_RATIO;
+}
+
+uint32_t micros(void) {
+    return timer_get_counter(TIM2) / 84;
 }
 
 void delay_ms(uint32_t ms) {

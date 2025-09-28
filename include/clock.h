@@ -16,4 +16,6 @@ void clock_setup();
 uint32_t get_uptime_ms();
 uint32_t get_uptime_us();
 
+uint32_t micros(void);
+
 void delay_ms(uint32_t ms);

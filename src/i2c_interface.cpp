@@ -12,7 +12,7 @@ void I2CDataSwitch(uint8_t* data, int size)
     uint8_t* dataPtr = data + 1;
     switch (data[0]){
         case CMD_GET_VERSION:
-            dataRet[0] = DRIVE_I2C_ADRESS;
+            dataRet[0] = DRIVE_I2C_VERSION;
             dataRetSize = sizeof(uint8_t);
         break;
         case CMD_SET_GREEN_LED:

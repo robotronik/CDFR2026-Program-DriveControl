@@ -3,6 +3,7 @@
 #include "clock.h"
 #include "math.h"
 #include "config.h"
+#include <libopencm3/stm32/exti.h>
 
 Motor* motorA = nullptr;
 Motor* motorB = nullptr;
@@ -30,6 +31,7 @@ static uint8_t adc_channels[] = {adc_channelA, adc_channelB, adc_channelC};
 static uint16_t * adc_values_registers[] = {NULL, NULL, NULL};
 void setuptimer(void);
 void adc_setup(void);
+void exti_setup(void);
 
 void setupDriveGPIO();
 
@@ -131,7 +133,15 @@ void Motor::Setup(){
 }
 
 void Motor::SetSpeedSigned(double speed) {
-	SetSpeedUnsigned(abs(speed), speed<0.0);
+	// PI controller
+	static double error_sum = 0.0;
+
+	double error = speed - GetSpeedPercent();
+
+	double power = 1.5 * error + 0.06 * error_sum;
+	error_sum += error;
+
+	SetSpeedUnsigned(abs(power), power<0.0);
 }
 
 void Motor::SetSpeedUnsigned(double speed, bool reverse) {
@@ -142,6 +152,7 @@ void Motor::SetSpeedUnsigned(double speed, bool reverse) {
 	if (braking) {
 		Brake(false);
 	}
+
 	SetDirection(reverse);
 	SetSpeed(speed);
 }
@@ -161,17 +172,22 @@ void Motor::Brake(bool brake) {
 	braking = brake;
 }
 
+#define REMAP(x, in_min, in_max, out_min, out_max) ((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
 
 void Motor::SetSpeed(double speed) {
-	const double minSpeed = 19.0;
-	if (speed > 7.0 && speed < minSpeed) {
-		speed = minSpeed;
-	}
-	else if (speed <= 7.0) {
-		speed = 0;
-	}
+	// speed is between 0 and 100
 	speed = CLAMP(speed,0,maxSpeed);
-	int pwmVal = (int)((speed/2.0 + 50) * COEFMULT);
+
+	double power;
+	if (speed < 2.0) {
+		// to avoid the motor to stop when the speed is very low
+		power = 0.0;
+	}
+	else
+		power = REMAP(speed, 0.0, 100.0, 8.0, 100.0);
+	power = CLAMP(power, 0.0, 100.0);
+
+	int pwmVal = (int)((power/2.0 + 50) * COEFMULT);
 
 	timer_set_oc_value(TIM1, _oc_id, pwmVal);
 }
@@ -187,7 +203,7 @@ void Motor::SetMaxTorque(int torque) {
 	}
 	else {
 		doesLimitTorque = true;
-		adc_start_conversion_regular(ADC1);
+		//adc_start_conversion_regular(ADC1);
 	}
 }
 
@@ -208,8 +224,8 @@ double Motor::GetCurrent(){
 }
 
 fault_action_t Motor::GetFault(){
-	int err1 = gpio_get(_port_Err1, _pin_Err1);
-	int err2 = gpio_get(_port_Err2, _pin_Err2);
+	int err1 = gpio_get(_port_Err1, _pin_Err1) != 0;
+	int err2 = gpio_get(_port_Err2, _pin_Err2) != 0;
 
 	switch (err1 + (err2 << 1)) {
 		case 0b00: 
@@ -226,7 +242,24 @@ fault_action_t Motor::GetFault(){
 
 void Motor::PrintValues(){
     //usartprintf(">ADC_%c:%4d\r\n", name, adc_value);
-    usartprintf(">Current_%c: %g A\r\n", name, GetCurrent());
+   // usartprintf(">Current_%c: %g A\r\n", name, GetCurrent());
+    //usartprintf(">Fault_%c: %d\r\n", name, GetFault());
+    //usartprintf(">Speed_%c: %.2lfrps\r\n", name, GetSpeed());
+    usartprintf(">Speed_%c: %.1lf\r\n", name, GetSpeedPercent());
+}
+
+void Motor::IncrementTacho(){
+	uint32_t now = micros();
+	uint32_t dt = now - tacho_timestamp;
+	tacho_timestamp = now;
+	if (dt > 0) {
+		double ratio = 10.0 * 12.0; // 12 pulses per revolution with a 10:1 gearbox
+		speed_rps = (1e6 / dt) / ratio; // in revolutions per second
+
+		if (gpio_get(_port_InfoDir, _pin_InfoDir) != 0) {
+			speed_rps = -speed_rps;
+		}
+	}
 }
 
 void setupDriveGPIO(void){
@@ -239,6 +272,7 @@ void setupDriveGPIO(void){
 	gpio_mode_setup(port_ModeDrive, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, pin_ModeDrive);
 	
 	gpio_set(port_ResetDrive, pin_ResetDrive);
+	exti_setup();
 	SetDriveMode(0);
 	DriveDisable();
 }
@@ -269,6 +303,49 @@ void Motor::setupGPIO(void){
 	gpio_set_af(_port_SpeedControl, GPIO_AF1, _pin_SpeedControl);
 	gpio_set_output_options(_port_SpeedControl, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, _pin_SpeedControl);
 	SetSpeed(0);
+}
+
+void exti_setup(void) {
+    // Enable all necessary clocks
+    rcc_periph_clock_enable(RCC_SYSCFG);
+
+    /* Motor C: PA0 → EXTI0 */
+    exti_select_source(EXTI0, GPIOA);
+    exti_set_trigger(EXTI0, EXTI_TRIGGER_RISING); //EXTI_TRIGGER_BOTH
+    exti_enable_request(EXTI0);
+
+    /* Motor A: PA5 → EXTI5 */
+    exti_select_source(EXTI5, GPIOA);
+    exti_set_trigger(EXTI5, EXTI_TRIGGER_RISING);
+    exti_enable_request(EXTI5);
+
+    /* Motor B: PC6 → EXTI6 */
+    exti_select_source(EXTI6, GPIOC);
+    exti_set_trigger(EXTI6, EXTI_TRIGGER_RISING);
+    exti_enable_request(EXTI6);
+
+    nvic_enable_irq(NVIC_EXTI0_IRQ);
+    nvic_enable_irq(NVIC_EXTI9_5_IRQ);
+	nvic_set_priority(NVIC_EXTI0_IRQ, 0);     // highest
+	nvic_set_priority(NVIC_EXTI9_5_IRQ, 0);   // highest
+}
+
+/* ISR for Motor C (PA0) */
+void exti0_isr(void) {
+    exti_reset_request(EXTI0);
+	if (motorC) motorC->IncrementTacho();
+}
+
+/* Shared ISR for Motor A (PA5) and Motor B (PC6) */
+void exti9_5_isr(void) {
+    if (exti_get_flag_status(EXTI5)) {
+        exti_reset_request(EXTI5);
+        if (motorA) motorA->IncrementTacho();
+    }
+    if (exti_get_flag_status(EXTI6)) {
+        exti_reset_request(EXTI6);
+        if (motorB) motorB->IncrementTacho();
+    }
 }
 
 void setuptimer(void){
@@ -382,7 +459,8 @@ void adc_setup(void){
 void adc_isr(void){
     if (adc_eoc(ADC1)) { // Vérifier si la conversion est terminée
 		if (adc_values_registers[current_channel_indx] != NULL) {
-			*adc_values_registers[current_channel_indx] = adc_read_regular(ADC1);
+			uint16_t val = (uint16_t)(adc_read_regular(ADC1) & 0x0FFF);
+			*adc_values_registers[current_channel_indx] = val;
 		}
         // Configurer le prochain canal et relancer la conversion
 		current_channel_indx++;
