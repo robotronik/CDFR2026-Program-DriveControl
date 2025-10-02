@@ -6,9 +6,10 @@
 #include "led.h"
 #include "clock.h"
 
-position_t global_pos = {0.0, 0.0, 0.0};
-position_t global_vel = {0.0, 0.0, 0.0};
-position_t global_acc = {0.0, 0.0, 0.0};
+position_t global_pos = {0.0, 0.0, 0.0}; // mm, mm, deg
+position_t global_pos_std_dev = {0.0, 0.0, 0.0}; // mm, mm, deg
+position_t global_vel = {0.0, 0.0, 0.0}; // mm/s, mm/s, deg/s
+position_t global_acc = {0.0, 0.0, 0.0}; // mm/s^2, mm/s^2, deg/s^2
 static position_t newPosition = {0.0, 0.0, 0.0};
 
 position_t global_target = {0.0, 0.0, 0.0};
@@ -37,6 +38,13 @@ void updatePositionData(){
     }
     else{
         // If the OTOS is not connected
+        RedLED_Set();
+    }
+    position_t r_pos_std_dev;
+    if (otos->getPositionStdDev(r_pos_std_dev) == ret_OK){
+        global_pos_std_dev = r_pos_std_dev;
+    }
+    else{
         RedLED_Set();
     }
 }

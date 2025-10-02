@@ -3,6 +3,7 @@
 
 // Read only
 extern position_t global_pos;
+extern position_t global_pos_std_dev;
 extern position_t global_vel;
 extern position_t global_acc;
 extern position_t global_target;

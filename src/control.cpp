@@ -16,12 +16,12 @@ void updateWheels()
 {
     // Constant factors
     const double kP_lin = 40.0;   // Gain for linear speed (mm/s per mm error)
-    const double kD_lin = 2.2;   // Derivative (mm/s per mm/s error)
+    const double kD_lin = 3.5;   // Derivative (mm/s per mm/s error)
 
     const double kP_ang = 15.0;  // Gain for angular speed (deg/s per deg error)
     const double kD_ang = 0.35;   // Derivative (deg/s per deg/s error)
 
-    const double maxLinSpeed = 1200.0; // mm/s
+    const double maxLinSpeed = 2200.0; // mm/s
     const double maxAngSpeed = 500.0;  // deg/s
 
     // Compute differences in position.

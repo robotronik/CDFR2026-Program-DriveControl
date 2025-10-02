@@ -59,7 +59,11 @@ int main(void)
 	delay_ms(100); 
 
 	// Reset the position of the robot
-	otos->calibrateImu();
+	if (otos->calibrateImu() == ret_OK)
+		usartprintf("OTOS IMU calibrated\n");
+	else
+		usartprintf("OTOS IMU calibration failed\n");
+	otos->resetTracking();
 
 	setPosition(0, 0, 0);
 	setTarget(0, 0, 0);
@@ -94,8 +98,12 @@ int main(void)
 
 		// Write the position to debug console
         dbg.interval([](){
-			usartprintf(">x:%.1lf,y:%.1lf,a:%.1lf\r\n", global_pos.x, global_pos.y, global_pos.a);
-			usartprintf(">tx:%.1lf,ty:%.1lf,ta:%.1lf\r\n", global_target.x, global_target.y, global_target.a);
+			usartprintf(">x:%.1lf+/-%.1lf mm, y:%.1lf+/-%.1lf mm, a:%.1lf+/-%.1lf deg\r\n", global_pos.x, global_pos_std_dev.x, global_pos.y, global_pos_std_dev.y, global_pos.a, global_pos_std_dev.a);
+			//usartprintf(">tx:%.1lf, ty:%.1lf, ta:%.1lf\r\n", global_target.x, global_target.y, global_target.a);
+			/*otos_status_t status;
+			otos->getStatus(status);
+			usartprintf("Status Tilt:%d, Optic:%d, PAA Err:%d, LSM Err:%d\r\n", status.warnTiltAngle, status.warnOpticalTracking, status.errorPaa, status.errorLsm);*/
+
 		},100);
 
 		//BLINK LED
