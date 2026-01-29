@@ -62,12 +62,10 @@ void setPosition(double x, double y, double a) {
 void setTarget(position_t incommingPos){
     newTarget = incommingPos;
     newTarget.a = mod_angle(incommingPos.a);
-    global_target = newTarget;
 }
 
 void setTarget(double x, double y, double a) {
     newTarget.x = x;
     newTarget.y = y;
     newTarget.a = mod_angle(a);
-    global_target = newTarget;
 }

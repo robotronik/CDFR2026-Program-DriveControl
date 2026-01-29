@@ -67,9 +67,6 @@ int main(void)
 
 	setPosition(0, 0, 0);
 	setTarget(0, 0, 0);
-
-	// TODO Remove fo testing
-    DriveEnable();
 	
 //
 //	Main Loop of the robot
