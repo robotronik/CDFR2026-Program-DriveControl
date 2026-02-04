@@ -135,6 +135,10 @@ void Motor::Setup(){
 void Motor::SetSpeedSigned(double speed) {
 	// PI controller
 	static double error_sum = 0.0;
+	if (!driveEnabled) {
+		error_sum = 0.0;
+		return;
+	}
 
 	double error = speed - GetSpeedPercent();
 
