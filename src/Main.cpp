@@ -64,6 +64,8 @@ int main(void)
 	else
 		usartprintf("OTOS IMU calibration failed\n");
 	otos->resetTracking();
+	otos->setLinearScalar(1.07f); // This should be 1.0f, but we found that 1.04f gives better position tracking, likely to compensate for some scaling issue with the sensor measurements
+	otos->setAngularScalar(1.0f);
 
 	setPosition(0, 0, 0);
 	setTarget(0, 0, 0);
