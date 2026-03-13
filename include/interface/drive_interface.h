@@ -13,7 +13,9 @@ typedef struct {
 } STRUCT_PACK status_t;
 
 typedef struct {
-    double x, y, a; // mm and degrees
+    double x = 0.0;
+    double y = 0.0;
+    double a = 0.0; // mm and degrees
 } position_t;
 
 typedef struct {
