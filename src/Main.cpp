@@ -56,17 +56,18 @@ int main(void)
 	RedLED_Clear();
 	usartprintf("OTOS connected\n");
 	
-	delay_ms(100); 
+	delay_ms(100);
+
+	otos->setLinearScalar(1.04f); // This should be 1.0f, but we found that 1.04f gives better position tracking, likely to compensate for some scaling issue with the sensor measurements
+	otos->setAngularScalar(1.0f);
 
 	// Reset the position of the robot
 	if (otos->calibrateImu() == ret_OK)
 		usartprintf("OTOS IMU calibrated\n");
 	else
 		usartprintf("OTOS IMU calibration failed\n");
-	otos->resetTracking();
-	otos->setLinearScalar(1.07f); // This should be 1.0f, but we found that 1.04f gives better position tracking, likely to compensate for some scaling issue with the sensor measurements
-	otos->setAngularScalar(1.0f);
 
+	otos->resetTracking();
 	setPosition(0, 0, 0);
 	setTarget(0, 0, 0);
 	
@@ -76,7 +77,8 @@ int main(void)
 	sequence ledToggleSeq;
     sequence mySeq;
     sequence dbg;
-    bool isDebug = false;
+    bool isDebug = true;
+	mySeq.reset();
 
 	while (1) {
 		uint32_t start_time = micros();
@@ -97,13 +99,14 @@ int main(void)
 
 		// Write the position to debug console
         dbg.interval([](){
-			usartprintf(">x:%.1lf+/-%.1lf mm, y:%.1lf+/-%.1lf mm, a:%.1lf+/-%.1lf deg\r\n", global_pos.x, global_pos_std_dev.x, global_pos.y, global_pos_std_dev.y, global_pos.a, global_pos_std_dev.a);
-			//usartprintf(">tx:%.1lf, ty:%.1lf, ta:%.1lf\r\n", global_target.x, global_target.y, global_target.a);
-			/*otos_status_t status;
-			otos->getStatus(status);
-			usartprintf("Status Tilt:%d, Optic:%d, PAA Err:%d, LSM Err:%d\r\n", status.warnTiltAngle, status.warnOpticalTracking, status.errorPaa, status.errorLsm);*/
+			//usartprintf(">x:%.1lf+/-%.1lf mm, y:%.1lf+/-%.1lf mm, a:%.1lf+/-%.1lf deg\r\n", global_pos.x, global_pos_std_dev.x, global_pos.y, global_pos_std_dev.y, global_pos.a, global_pos_std_dev.a);
+			usartprintf(">tx:%.1lf,\t ty:%.1lf,\t ta:%.1lf\r\n", global_target.x, global_target.y, global_target.a);
+			usartprintf("> x:%.1lf,\t  y:%.1lf,\t  a:%.1lf\r\n", global_pos.x, global_pos.y, global_pos.a);
+			//otos_status_t status;
+			//otos->getStatus(status);
+			//usartprintf("Status Tilt:%d, Optic:%d, PAA Err:%d, LSM Err:%d\r\n", status.warnTiltAngle, status.warnOpticalTracking, status.errorPaa, status.errorLsm);
 
-		},100);
+		},50);
 
 		//BLINK LED
 		ledToggleSeq.interval([](){
@@ -123,36 +126,27 @@ int main(void)
 void testMotors(){
     DriveEnable();
 	ResetDrive();
+	double s = 30.0;
 
-    for (double i = 0.0; i <= 100.0; i+=0.1) {
+    for (int i = 0; i < 100; i++) {
         usartprintf("%g\n",i);
-		motorA->SetSpeedSigned(i);
-		motorB->SetSpeedSigned(i);
-		motorC->SetSpeedSigned(i);
+		motorA->SetSpeedSigned(s);
+		motorB->SetSpeedSigned(s);
+		motorC->SetSpeedSigned(s);
 		motorA->PrintValues();
 		motorB->PrintValues();
 		motorC->PrintValues();
-        delay_ms(5);
+        delay_ms(3);
     }
-    for (double i = 100.0; i > -100.0; i-=0.1) {
+    for (int i = 0; i < 100; i++) {
         usartprintf("%g\n",i);
-		motorA->SetSpeedSigned(i);
-		motorB->SetSpeedSigned(i);
-		motorC->SetSpeedSigned(i);
+		motorA->SetSpeedSigned(-s);
+		motorB->SetSpeedSigned(-s);
+		motorC->SetSpeedSigned(-s);
 		motorA->PrintValues();
 		motorB->PrintValues();
 		motorC->PrintValues();
-        delay_ms(5);
-    }
-    for (double i = -100.0; i <= 0.0; i+=0.1) {
-        usartprintf("%g\n",i);
-		motorA->SetSpeedSigned(i);
-		motorB->SetSpeedSigned(i);
-		motorC->SetSpeedSigned(i);
-		motorA->PrintValues();
-		motorB->PrintValues();
-		motorC->PrintValues();
-        delay_ms(5);
+        delay_ms(3);
     }
 
 	DriveDisable();
@@ -164,7 +158,7 @@ void testloop(sequence* seq) {
 	seq->delay([](){
         robotI2cInterface->set_coordinates({0,0,0});
         robotI2cInterface->enable();
-		robotI2cInterface->set_target({200,0,0});
+		robotI2cInterface->set_target({0,0,90});
 	},0);
 
 	seq->delay([](){

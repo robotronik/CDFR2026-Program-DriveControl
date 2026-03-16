@@ -142,7 +142,7 @@ void Motor::SetSpeedSigned(double speed) {
 
 	double error = speed - GetSpeedPercent();
 
-	double power = 1.5 * error + 0.06 * error_sum;
+	double power = 1.5 * error + 0.08 * error_sum;
 	error_sum += error;
 
 	SetSpeedUnsigned(abs(power), power<0.0);

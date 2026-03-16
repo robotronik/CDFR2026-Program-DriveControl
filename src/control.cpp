@@ -2,12 +2,14 @@
 #include "position.h"
 #include "Wheel.h"
 #include "ctrl_math.h"
-#include "clock.h"
 #include <math.h>
 
 double errDistance;
 double errHeading;
 double angleToTarget;
+
+static double linErrorIntegral = 0.0;
+static double angErrorIntegral = 0.0;
 
 // Updates the speeds of three wheels based on the current and target positions.
 // The controller computes the distance and orientation error and then determines
@@ -15,14 +17,19 @@ double angleToTarget;
 void updateWheels()
 {
     // Constant factors
-    const double kP_lin = 40.0;   // Gain for linear speed (mm/s per mm error)
-    const double kD_lin = 3.5;   // Derivative (mm/s per mm/s error)
+    const double kP_lin = 15.0;   // Gain for linear speed (mm/s per mm error)
+    const double kI_lin = 5.0;    // Integral gain (mm/s per mm*s error)
+    const double kD_lin = 2.0;   // Derivative (mm/s per mm/s error)
 
-    const double kP_ang = 15.0;  // Gain for angular speed (deg/s per deg error)
-    const double kD_ang = 0.35;   // Derivative (deg/s per deg/s error)
+    const double kP_ang = 4.0;  // Gain for angular speed (deg/s per deg error)
+    const double kI_ang = 0.5;   // Integral gain (deg/s per deg*s error)
+    const double kD_ang = 0.5;   // Derivative (deg/s per deg/s error)
 
-    const double maxLinSpeed = 2200.0; // mm/s
-    const double maxAngSpeed = 500.0;  // deg/s
+    const double maxLinSpeed = 2000.0; // mm/s
+    const double maxAngSpeed = 300.0;  // deg/s
+    const double maxLinIntegralTerm = maxLinSpeed / 10.0;
+    const double maxAngIntegralTerm = maxAngSpeed / 10.0;
+    const double fixedDt = 0.004;       // 250 Hz control loop
 
     // Compute differences in position.
     double dx = global_target.x - global_pos.x; // in mm
@@ -32,10 +39,39 @@ void updateWheels()
     errHeading = mod_angle(global_target.a - global_pos.a);
     double lin_speed = sqrt(global_vel.x * global_vel.x + global_vel.y * global_vel.y);  //mm/s
     double ang_speed = global_vel.a;
+
+    if (errDistance <= 1.0) {
+        // If we are very close to the target, stop the robot to avoid oscillations.
+        errDistance = 0.0;
+        linErrorIntegral = 0.0;
+    }
+
+    if (fabs(errHeading) <= 0.4) {
+        errHeading = 0.0;
+        angErrorIntegral = 0.0;
+    }
+
+    linErrorIntegral += errDistance * fixedDt;
+    if (kI_lin > 0.0) {
+        double maxIntegralState = maxLinIntegralTerm / kI_lin;
+        linErrorIntegral = fmin(fmax(linErrorIntegral, -maxIntegralState), maxIntegralState);
+    }
+
+    angErrorIntegral += errHeading * fixedDt;
+    if (kI_ang > 0.0) {
+        double maxAngIntegralState = maxAngIntegralTerm / kI_ang;
+        angErrorIntegral = fmin(fmax(angErrorIntegral, -maxAngIntegralState), maxAngIntegralState);
+    }
+
+    double linIntegralTerm = kI_lin * linErrorIntegral;
+    linIntegralTerm = fmin(fmax(linIntegralTerm, -maxLinIntegralTerm), maxLinIntegralTerm);
+
+    double angIntegralTerm = kI_ang * angErrorIntegral;
+    angIntegralTerm = fmin(fmax(angIntegralTerm, -maxAngIntegralTerm), maxAngIntegralTerm);
     
     // Compute commanded speeds.
-    double commandedLin = kP_lin * errDistance - lin_speed * kD_lin; // mm/s
-    double commandedAng = kP_ang * errHeading - ang_speed * kD_ang;  // degs/s
+    double commandedLin = kP_lin * errDistance + linIntegralTerm - lin_speed * kD_lin; // mm/s
+    double commandedAng = kP_ang * errHeading + angIntegralTerm - ang_speed * kD_ang;  // degs/s
 
 
 

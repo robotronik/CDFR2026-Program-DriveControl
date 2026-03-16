@@ -40,6 +40,7 @@ void updatePositionData(){
         // If the OTOS is not connected
         RedLED_Set();
     }
+    /*
     position_t r_pos_std_dev;
     if (otos->getPositionStdDev(r_pos_std_dev) == ret_OK){
         global_pos_std_dev = r_pos_std_dev;
@@ -47,6 +48,7 @@ void updatePositionData(){
     else{
         RedLED_Set();
     }
+        */
 }
 
 void setPosition(position_t incommingPos) {
