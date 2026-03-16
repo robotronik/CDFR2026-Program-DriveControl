@@ -20,6 +20,7 @@ typedef enum {
     FAULT_LOW_LOAD_CURRENT = 5
 } fault_action_t;
 
+bool isDriveEnabled();
 void DriveDisable();
 void DriveEnable();
 // Set the current-decay method.

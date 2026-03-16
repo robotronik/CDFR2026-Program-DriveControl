@@ -47,6 +47,10 @@ void DriveEnable(){
 	driveEnabled = true;
 }
 
+bool isDriveEnabled(){
+	return driveEnabled;
+}
+
 /*
 Sets the current-decay method. Referring to table 3, when
 in slow-decay mode, MODE = 1, only the high-side MOSFET

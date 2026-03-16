@@ -16,6 +16,14 @@ static double angErrorIntegral = 0.0;
 // commanded speeds using proportional gains.
 void updateWheels()
 {
+    if (isDriveEnabled() == false) {
+        linErrorIntegral = 0.0;
+        angErrorIntegral = 0.0;
+        wheelA->setSpeed(0.0);
+        wheelB->setSpeed(0.0);
+        wheelC->setSpeed(0.0);
+        return;
+    }
     // Constant factors
     const double kP_lin = 15.0;   // Gain for linear speed (mm/s per mm error)
     const double kI_lin = 5.0;    // Integral gain (mm/s per mm*s error)
