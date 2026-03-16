@@ -77,8 +77,7 @@ int main(void)
 	sequence ledToggleSeq;
     sequence mySeq;
     sequence dbg;
-    bool isDebug = true;
-	mySeq.reset();
+    bool isDebug = false;
 
 	while (1) {
 		uint32_t start_time = micros();
