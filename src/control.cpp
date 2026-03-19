@@ -8,7 +8,8 @@ double errDistance;
 double errHeading;
 double angleToTarget;
 
-static double linErrorIntegral = 0.0;
+static double linErrorIntegralX = 0.0;
+static double linErrorIntegralY = 0.0;
 static double angErrorIntegral = 0.0;
 
 // Updates the speeds of three wheels based on the current and target positions.
@@ -17,7 +18,8 @@ static double angErrorIntegral = 0.0;
 void updateWheels()
 {
     if (isDriveEnabled() == false) {
-        linErrorIntegral = 0.0;
+        linErrorIntegralX = 0.0;
+        linErrorIntegralY = 0.0;
         angErrorIntegral = 0.0;
         wheelA->setSpeed(0.0);
         wheelB->setSpeed(0.0);
@@ -51,7 +53,8 @@ void updateWheels()
     if (errDistance <= 1.0) {
         // If we are very close to the target, stop the robot to avoid oscillations.
         errDistance = 0.0;
-        linErrorIntegral = 0.0;
+        linErrorIntegralX = 0.0;
+        linErrorIntegralY = 0.0;
     }
 
     if (fabs(errHeading) <= 0.4) {
@@ -59,10 +62,13 @@ void updateWheels()
         angErrorIntegral = 0.0;
     }
 
-    linErrorIntegral += errDistance * fixedDt;
+    linErrorIntegralX += dx * fixedDt;
+    linErrorIntegralY += dy * fixedDt;
+
     if (kI_lin > 0.0) {
         double maxIntegralState = maxLinIntegralTerm / kI_lin;
-        linErrorIntegral = fmin(fmax(linErrorIntegral, -maxIntegralState), maxIntegralState);
+        linErrorIntegralX = fmin(fmax(linErrorIntegralX, -maxIntegralState), maxIntegralState);
+        linErrorIntegralY = fmin(fmax(linErrorIntegralY, -maxIntegralState), maxIntegralState);
     }
 
     angErrorIntegral += errHeading * fixedDt;
@@ -71,17 +77,20 @@ void updateWheels()
         angErrorIntegral = fmin(fmax(angErrorIntegral, -maxAngIntegralState), maxAngIntegralState);
     }
 
-    double linIntegralTerm = kI_lin * linErrorIntegral;
-    linIntegralTerm = fmin(fmax(linIntegralTerm, -maxLinIntegralTerm), maxLinIntegralTerm);
+    double linIntegralTermX = kI_lin * linErrorIntegralX;
+    double linIntegralTermY = kI_lin * linErrorIntegralY;
+
+    linIntegralTermX = fmin(fmax(linIntegralTermX, -maxLinIntegralTerm), maxLinIntegralTerm);
+    linIntegralTermY = fmin(fmax(linIntegralTermY, -maxLinIntegralTerm), maxLinIntegralTerm);
 
     double angIntegralTerm = kI_ang * angErrorIntegral;
     angIntegralTerm = fmin(fmax(angIntegralTerm, -maxAngIntegralTerm), maxAngIntegralTerm);
     
-    // Compute commanded speeds.
-    double commandedLin = kP_lin * errDistance + linIntegralTerm - lin_speed * kD_lin; // mm/s
+    double commandedLinX = kP_lin * dx + linIntegralTermX - global_vel.x * kD_lin; // mm/s
+    double commandedLinY = kP_lin * dy + linIntegralTermY - global_vel.y * kD_lin; // mm/s
+
+    double commandedLin = sqrt(commandedLinX * commandedLinX + commandedLinY * commandedLinY);
     double commandedAng = kP_ang * errHeading + angIntegralTerm - ang_speed * kD_ang;  // degs/s
-
-
 
     commandedLin = fmin(fmax(commandedLin, -maxLinSpeed), maxLinSpeed); // Limit linear speed
     commandedAng = fmin(fmax(commandedAng, -maxAngSpeed), maxAngSpeed); // Limit angular speed
