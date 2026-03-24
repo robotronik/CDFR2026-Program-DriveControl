@@ -2,6 +2,7 @@
 #include "Wheel.h"
 #include "config.h"
 #include "types/structs.h"
+#include "position.h"
 
 Wheel* wheelA = nullptr; // WheelA at 0°
 Wheel* wheelB = nullptr; // WheelB at 120°
@@ -14,9 +15,9 @@ Wheel::Wheel(double dist, double ang, double diameter, Motor* motorPtr) :
 }
 
 
-// Updates the speed of a single wheel given the commandd linear and angular velocities.
+// Updates the speed of a single wheel given the commanded linear and angular velocities.
 // linear: linear speed of robot in mm/s
-// theta: current error angle to target in degrees
+// theta: current error angle to target in degrees (robot-relative)
 // angular: angular speed of robot in degrees/s
 void Wheel::update(double linear, double theta, double angular) {
     double rad = (angle + theta) * DEG_TO_RAD;
@@ -24,7 +25,7 @@ void Wheel::update(double linear, double theta, double angular) {
     double circumference = PI * diam; // in mm
     double robotCircumference = 2 * PI * distanceToCenter; // in mm
     
-    // Compute the wheel speed by projecting the commandd linear velocity and adding the contribution of rotational velocity.
+    // Compute the wheel speed by projecting the command linear velocity and adding the contribution of rotational velocity.
     // The wheel speed is in mm/s.
     double wheelSpeed = linear * -sin(rad) + robotCircumference * angular / 360;
 
