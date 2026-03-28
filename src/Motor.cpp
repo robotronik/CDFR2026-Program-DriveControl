@@ -139,7 +139,7 @@ void Motor::Setup(){
 void Motor::SetSpeedSigned(double speed) {
 	// PI controller
 	static double error_sum = 0.0;
-	if (!driveEnabled) {
+	if (!driveEnabled || braking) {
 		error_sum = 0.0;
 		return;
 	}
@@ -153,13 +153,14 @@ void Motor::SetSpeedSigned(double speed) {
 }
 
 void Motor::SetSpeedUnsigned(double speed, bool reverse) {
-	if (!driveEnabled) {
+	if (!driveEnabled || braking) {
 		//usartprintf("Drive not enabled\n");
 		return;
 	}
+	/*
 	if (braking) {
 		Brake(false);
-	}
+	}*/
 
 	SetDirection(reverse);
 	SetSpeed(speed);

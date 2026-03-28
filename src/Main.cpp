@@ -53,6 +53,11 @@ int main(void)
 		RedLED_Toggle();
 		delay_ms(200); 
 	}
+	while (otos->selfTest() != ret_OK) {
+		usartprintf("OTOS self-test failed\n");
+		RedLED_Toggle();
+		delay_ms(200); 
+	}
 	RedLED_Clear();
 	usartprintf("OTOS connected\n");
 	
@@ -62,12 +67,14 @@ int main(void)
 	otos->setAngularScalar(1.0f);
 
 	// Reset the position of the robot
+	otos->resetTracking();
+	
 	if (otos->calibrateImu() == ret_OK)
 		usartprintf("OTOS IMU calibrated\n");
-	else
+	else {
 		usartprintf("OTOS IMU calibration failed\n");
+	}
 
-	otos->resetTracking();
 	setPosition(0, 0, 0);
 	setTarget(0, 0, 0);
 	
@@ -105,7 +112,7 @@ int main(void)
 			//otos->getStatus(status);
 			//usartprintf("Status Tilt:%d, Optic:%d, PAA Err:%d, LSM Err:%d\r\n", status.warnTiltAngle, status.warnOpticalTracking, status.errorPaa, status.errorLsm);
 
-		},50);
+		},500);
 
 		//BLINK LED
 		ledToggleSeq.interval([](){
