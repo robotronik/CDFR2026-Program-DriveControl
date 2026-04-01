@@ -33,9 +33,8 @@ int main(void)
 	i2c_setup();
 	setCallbackReceive(I2CRecieveData);
 
-	usartprintf("Start\n");
+	usartprintf("Starting...\n");
 	delay_ms(200);
-
 
 	i2cDevice = new I2CDevice(kDefaultAddress);
 	otos = new OTOS(i2cDevice);
@@ -60,11 +59,25 @@ int main(void)
 	}
 	RedLED_Clear();
 	usartprintf("OTOS connected\n");
+
+	delay_ms(100);
+	// Set the OTOS settings
+	/*
+	otos_signal_process_config_t signalConfig;
+    otos->getSignalProcessConfig(signalConfig);
+	usartprintf("OTOS signal process before config: LUT:%d, Acc:%d, Rot:%d, Var:%d\n", signalConfig.enLut, signalConfig.enAcc, signalConfig.enRot, signalConfig.enVar);
+    
+	signalConfig.enLut = 1;
+	otos->setSignalProcessConfig(signalConfig);
+	delay_ms(100);
+    otos->getSignalProcessConfig(signalConfig);
+	usartprintf("OTOS signal process after config: LUT:%d, Acc:%d, Rot:%d, Var:%d\n", signalConfig.enLut, signalConfig.enAcc, signalConfig.enRot, signalConfig.enVar);
 	
 	delay_ms(100);
+	*/
 
-	otos->setLinearScalar(1.10f); // This should be 1.0f, but we found that 1.04f gives better position tracking, likely to compensate for some scaling issue with the sensor measurements
-	otos->setAngularScalar(1.0f);
+	otos->setLinearScalar(1.1f); // This should be 1.0f, but we found that 1.04f gives better position tracking, likely to compensate for some scaling issue with the sensor measurements
+	otos->setAngularScalar(0.994f);
 
 	// Reset the position of the robot
 	otos->resetTracking();
@@ -106,8 +119,9 @@ int main(void)
 		// Write the position to debug console
         dbg.interval([](){
 			//usartprintf(">x:%.1lf+/-%.1lf mm, y:%.1lf+/-%.1lf mm, a:%.1lf+/-%.1lf deg\r\n", global_pos.x, global_pos_std_dev.x, global_pos.y, global_pos_std_dev.y, global_pos.a, global_pos_std_dev.a);
-			usartprintf(">tx:%.1lf,\t ty:%.1lf,\t ta:%.1lf\r\n", global_target.x, global_target.y, global_target.a);
+			//usartprintf(">tx:%.1lf,\t ty:%.1lf,\t ta:%.1lf\r\n", global_target.x, global_target.y, global_target.a);
 			usartprintf("> x:%.1lf,\t  y:%.1lf,\t  a:%.1lf\r\n", global_pos.x, global_pos.y, global_pos.a);
+			//usartprintf("> x:%.1lf,\t  y:%.1lf,\t  a:%.1lf\r\n", global_vel.x, global_vel.y, global_vel.a);
 			//otos_status_t status;
 			//otos->getStatus(status);
 			//usartprintf("Status Tilt:%d, Optic:%d, PAA Err:%d, LSM Err:%d\r\n", status.warnTiltAngle, status.warnOpticalTracking, status.errorPaa, status.errorLsm);
