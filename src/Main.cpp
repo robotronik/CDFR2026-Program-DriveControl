@@ -75,9 +75,10 @@ int main(void)
 	
 	delay_ms(100);
 	*/
-
-	otos->setLinearScalar(1.025f); // This should be 1.0f, but we found that 1.04f gives better position tracking, likely to compensate for some scaling issue with the sensor measurements
-	otos->setAngularScalar(0.994f);
+	position_t otos_offset = {0.0, 0.0, -0.3}; // Positive when needing to compensate for going forwared when going to the right
+	otos->setOffset(otos_offset);
+	otos->setLinearScalar(0.986f); // This should be 1.0f, but we found that 1.04f gives better position tracking, likely to compensate for some scaling issue with the sensor measurements
+	otos->setAngularScalar(1.00f);
 
 	// Reset the position of the robot
 	otos->resetTracking();
