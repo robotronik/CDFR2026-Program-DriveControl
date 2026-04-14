@@ -99,8 +99,14 @@ typedef union {
         /// only the IMU data is used for tracking unless warnTiltAngle is set
         uint8_t warnOpticalTracking : 1;
 
-        /// @brief Reserved bits, do not use
-        uint8_t reserved : 4;
+        /// @brief Returns 1 if the optical sensor has a fatal error 1
+        uint8_t errorPaa1 : 1;
+        /// @brief Returns 1 if the optical sensor has a fatal error 2
+        uint8_t errorPaa2 : 1;
+        /// @brief Returns 1 if the optical sensor has a fatal error 3 
+        uint8_t errorPaa3 : 1;
+        /// @brief Returns 1 if the optical sensor has a fatal error 4
+        uint8_t errorPaa4 : 1;
 
         /// @brief Returns 1 if the optical sensor has a fatal error
         uint8_t errorPaa : 1;
