@@ -51,6 +51,7 @@ typedef struct {
 #define CMD_SET_TARGET 0x24
 #define CMD_DISABLE 0x31
 #define CMD_ENABLE 0x32
+#define CMD_CALIBRATE_OTOS 0x33
 #define CMD_GET_CURRENT 0x41
 #define CMD_GET_SPEED 0x42
 #define CMD_SET_BRAKE_STATE 0x51
@@ -77,6 +78,9 @@ public:
 
     void disable();
     void enable();
+
+    // Calibrate the otos, takes around 800ms and should be called when the robot is stationary.
+    void calibrate_otos();
 
     packed_motor_t get_current(); // in Amps
     packed_motor_t get_speed(); // in rps

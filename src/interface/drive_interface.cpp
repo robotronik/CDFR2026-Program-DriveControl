@@ -3,7 +3,7 @@
 #include "Motor.h"
 #include "position.h"
 #include "I2C.h"
-
+#include "odometry/OTOS.h"
 
 drive_interface::drive_interface(){}
 
@@ -70,6 +70,10 @@ void drive_interface::disable() {
 void drive_interface::enable() {
     //asserv_reset();
     DriveEnable();
+}
+
+void drive_interface::calibrate_otos(){
+    otos->calibrateImu(255, false);
 }
 
 packed_motor_t drive_interface::get_current() {
