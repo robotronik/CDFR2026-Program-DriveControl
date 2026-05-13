@@ -77,7 +77,7 @@ int main(void)
 	*/
 	position_t otos_offset = {0.0, 0.0, -0.4}; // Positive when needing to compensate for going forwared when going to the right
 	otos->setOffset(otos_offset);
-	otos->setLinearScalar(1.015f); // This should be 1.0f, but we found that 1.04f gives better position tracking, likely to compensate for some scaling issue with the sensor measurements
+	otos->setLinearScalar(0.99f); // This should be 1.0f, but we found that 1.04f gives better position tracking, likely to compensate for some scaling issue with the sensor measurements
 	otos->setAngularScalar(0.99f);
 
 	// Reset the position of the robot
