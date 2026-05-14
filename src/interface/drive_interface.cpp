@@ -120,18 +120,24 @@ void drive_interface::set_max_torque(double current){
 
 void drive_interface::set_linear_scalar(float scalar) {
     otos->setLinearScalar(scalar);
+    // reset the tracking
+    otos->resetTracking();
+    otos->setPosition(global_pos);
 }
 
 float drive_interface::get_linear_scalar() {
     float scalar = 1.0f;
     if (otos->getLinearScalar(scalar) != ret_OK) {
         return 1.0f;
-    }
+    }    
     return scalar;
 }
 
 void drive_interface::set_angular_scalar(float scalar) {
     otos->setAngularScalar(scalar);
+    // reset the tracking
+    otos->resetTracking();
+    otos->setPosition(global_pos);
 }
 
 float drive_interface::get_angular_scalar() {
@@ -145,6 +151,9 @@ float drive_interface::get_angular_scalar() {
 void drive_interface::set_offset(position_t offset) {
     position_t write_offset = offset;
     otos->setOffset(write_offset);
+    // reset the tracking
+    otos->resetTracking();
+    otos->setPosition(global_pos);
 }
 
 position_t drive_interface::get_offset() {
