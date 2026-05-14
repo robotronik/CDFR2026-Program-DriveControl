@@ -95,14 +95,14 @@ public:
 
     void set_max_torque(double current); // in Amps
 
-    void setLinearScalar(float scalar);
-    float getLinearScalar();
+    void set_linear_scalar(float scalar);
+    float get_linear_scalar();
 
-    void setAngularScalar(float scalar);
-    float getAngularScalar();
+    void set_angular_scalar(float scalar);
+    float get_angular_scalar();
 
-    void setOffset(position_t offset);
-    position_t getOffset();
+    void set_offset(position_t offset);
+    position_t get_offset();
     
     status_t get_status();
 };

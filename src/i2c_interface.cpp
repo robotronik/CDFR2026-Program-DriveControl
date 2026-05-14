@@ -92,7 +92,7 @@ void I2CDataSwitch(uint8_t* data, int size)
             break;
         case CMD_GET_LINEAR_SCALAR:
             {
-                float scalar = robotI2cInterface->getLinearScalar();
+                float scalar = robotI2cInterface->get_linear_scalar();
                 pack(dataRet, &scalar, sizeof(float));
                 dataRetSize = sizeof(float);
             }
@@ -101,12 +101,12 @@ void I2CDataSwitch(uint8_t* data, int size)
             {
                 float scalar;
                 unpack(dataPtr, &scalar, sizeof(float));
-                robotI2cInterface->setLinearScalar(scalar);
+                robotI2cInterface->set_linear_scalar(scalar);
             }
             break;
         case CMD_GET_ANGULAR_SCALAR:
             {
-                float scalar = robotI2cInterface->getAngularScalar();
+                float scalar = robotI2cInterface->get_angular_scalar();
                 pack(dataRet, &scalar, sizeof(float));
                 dataRetSize = sizeof(float);
             }
@@ -115,12 +115,12 @@ void I2CDataSwitch(uint8_t* data, int size)
             {
                 float scalar;
                 unpack(dataPtr, &scalar, sizeof(float));
-                robotI2cInterface->setAngularScalar(scalar);
+                robotI2cInterface->set_angular_scalar(scalar);
             }
             break;
         case CMD_GET_OFFSET:
             {
-                position_t offset = robotI2cInterface->getOffset();
+                position_t offset = robotI2cInterface->get_offset();
                 pack(dataRet, &offset, sizeof(position_t));
                 dataRetSize = sizeof(position_t);
             }
@@ -129,7 +129,7 @@ void I2CDataSwitch(uint8_t* data, int size)
             {
                 position_t offset;
                 unpack(dataPtr, &offset, sizeof(position_t));
-                robotI2cInterface->setOffset(offset);
+                robotI2cInterface->set_offset(offset);
             }
             break;
         default:
