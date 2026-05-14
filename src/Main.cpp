@@ -121,7 +121,7 @@ int main(void)
         dbg.interval([](){
 			//usartprintf(">x:%.1lf+/-%.1lf mm, y:%.1lf+/-%.1lf mm, a:%.1lf+/-%.1lf deg\r\n", global_pos.x, global_pos_std_dev.x, global_pos.y, global_pos_std_dev.y, global_pos.a, global_pos_std_dev.a);
 			//usartprintf(">tx:%.1lf,\t ty:%.1lf,\t ta:%.1lf\r\n", global_target.x, global_target.y, global_target.a);
-			usartprintf("> x:%.1lf,\t  y:%.1lf,\t  a:%.1lf\r\n", global_pos.x, global_pos.y, global_pos.a);
+			//usartprintf("> x:%.1lf,\t  y:%.1lf,\t  a:%.1lf\r\n", global_pos.x, global_pos.y, global_pos.a);
 			//usartprintf("> x:%.1lf,\t  y:%.1lf,\t  a:%.1lf\r\n", global_vel.x, global_vel.y, global_vel.a);
 			//otos_status_t status;
 			//otos->getStatus(status);
