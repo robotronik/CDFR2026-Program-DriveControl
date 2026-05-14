@@ -118,6 +118,43 @@ void drive_interface::set_max_torque(double current){
     motorC->SetMaxTorque(val);
 }
 
+void drive_interface::setLinearScalar(float scalar) {
+    otos->setLinearScalar(scalar);
+}
+
+float drive_interface::getLinearScalar() {
+    float scalar = 1.0f;
+    if (otos->getLinearScalar(scalar) != ret_OK) {
+        return 1.0f;
+    }
+    return scalar;
+}
+
+void drive_interface::setAngularScalar(float scalar) {
+    otos->setAngularScalar(scalar);
+}
+
+float drive_interface::getAngularScalar() {
+    float scalar = 1.0f;
+    if (otos->getAngularScalar(scalar) != ret_OK) {
+        return 1.0f;
+    }
+    return scalar;
+}
+
+void drive_interface::setOffset(position_t offset) {
+    position_t write_offset = offset;
+    otos->setOffset(write_offset);
+}
+
+position_t drive_interface::getOffset() {
+    position_t offset = {0.0, 0.0, 0.0};
+    if (otos->getOffset(offset) != ret_OK) {
+        return position_t{0.0, 0.0, 0.0};
+    }
+    return offset;
+}
+
 status_t drive_interface::get_status() {
     status_t status;
     status.is_error1 = false;

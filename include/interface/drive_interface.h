@@ -57,6 +57,12 @@ typedef struct {
 #define CMD_SET_BRAKE_STATE 0x51
 #define CMD_SET_MAX_TORQUE 0x52
 #define CMD_GET_STATUS 0x61
+#define CMD_GET_LINEAR_SCALAR 0x71
+#define CMD_SET_LINEAR_SCALAR 0x72
+#define CMD_GET_ANGULAR_SCALAR 0x73
+#define CMD_SET_ANGULAR_SCALAR 0x74
+#define CMD_GET_OFFSET 0x75
+#define CMD_SET_OFFSET 0x76
 
 class drive_interface
 {
@@ -88,6 +94,15 @@ public:
     void set_brake_state(bool enable);
 
     void set_max_torque(double current); // in Amps
+
+    void setLinearScalar(float scalar);
+    float getLinearScalar();
+
+    void setAngularScalar(float scalar);
+    float getAngularScalar();
+
+    void setOffset(position_t offset);
+    position_t getOffset();
     
     status_t get_status();
 };
