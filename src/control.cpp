@@ -28,14 +28,14 @@ void updateWheels()
     }
 
     // PID Gains - Linear Control (independent X/Y)
-    const double kP_lin = 18.0;   // Proportional (mm/s per mm error)
+    const double kP_lin = 14.0;   // Proportional (mm/s per mm error)
     const double kI_lin = 30.0;//5.0;    // Integral gain (mm/s per mm*s error)
-    const double kD_lin = 0.5;//0.75;   // Derivative (mm/s per mm/s error)
+    const double kD_lin = 0.7;//0.75;   // Derivative (mm/s per mm/s error)
 
     // PID Gains - Angular Control
     const double kP_ang = 12.0;    // Gain for angular speed (deg/s per deg error)
     const double kI_ang = 0.5;    // Integral gain (deg/s per deg*s error)
-    const double kD_ang = 0.5;    // Derivative (deg/s per deg/s error)
+    const double kD_ang = 0.6;    // Derivative (deg/s per deg/s error)
 
     // Limits and thresholds
     const double maxLinSpeed = 2000.0;         // mm/s
