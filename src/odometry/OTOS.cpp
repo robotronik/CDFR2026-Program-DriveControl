@@ -179,8 +179,13 @@ return_t OTOS::getLinearScalar(float &scalar)
 return_t OTOS::setLinearScalar(float scalar)
 {
     // Check if the scalar is out of bounds
-    if (scalar < kMinScalar || scalar > kMaxScalar)
-        return ret_FAIL;
+    //if (scalar < kMinScalar || scalar > kMaxScalar)
+    //    return ret_FAIL;
+
+    if (scalar < kMinScalar)
+        scalar = kMinScalar;
+    else if (scalar > kMaxScalar)
+        scalar = kMaxScalar;
 
     // Convert to integer, multiples of 0.1% (+0.5 to round instead of truncate)
     uint8_t rawScalar = (int8_t)((scalar - 1.0f) * 1000 + 0.5f);
@@ -218,8 +223,13 @@ return_t OTOS::getAngularScalar(float &scalar)
 return_t OTOS::setAngularScalar(float scalar)
 {
     // Check if the scalar is out of bounds
-    if (scalar < kMinScalar || scalar > kMaxScalar)
-        return ret_FAIL;
+    //if (scalar < kMinScalar || scalar > kMaxScalar)
+    //    return ret_FAIL;
+
+    if (scalar < kMinScalar)
+        scalar = kMinScalar;
+    else if (scalar > kMaxScalar)
+        scalar = kMaxScalar;
 
     // Convert to integer, multiples of 0.1% (+0.5 to round instead of truncate)
     uint8_t rawScalar = (int8_t)((scalar - 1.0f) * 1000 + 0.5f);

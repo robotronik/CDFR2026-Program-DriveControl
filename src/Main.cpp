@@ -77,7 +77,7 @@ int main(void)
 	*/
 	position_t otos_offset = {0.0, 0.0, -0.5f}; // Positive when needing to compensate for going forwared when going to the right
 	otos->setOffset(otos_offset);
-	otos->setLinearScalar(1.01f); // This should be 1.0f, but we found that 1.04f gives better position tracking, likely to compensate for some scaling issue with the sensor measurements
+	otos->setLinearScalar(0.99f);
 	otos->setAngularScalar(0.99f);
 
 	// Reset the position of the robot
@@ -121,13 +121,13 @@ int main(void)
         dbg.interval([](){
 			//usartprintf(">x:%.1lf+/-%.1lf mm, y:%.1lf+/-%.1lf mm, a:%.1lf+/-%.1lf deg\r\n", global_pos.x, global_pos_std_dev.x, global_pos.y, global_pos_std_dev.y, global_pos.a, global_pos_std_dev.a);
 			//usartprintf(">tx:%.1lf,\t ty:%.1lf,\t ta:%.1lf\r\n", global_target.x, global_target.y, global_target.a);
-			//usartprintf("> x:%.1lf,\t  y:%.1lf,\t  a:%.1lf\r\n", global_pos.x, global_pos.y, global_pos.a);
+			usartprintf("> x:%.1lf,\t  y:%.1lf,\t  a:%.1lf\r\n", global_pos.x, global_pos.y, global_pos.a);
 			//usartprintf("> x:%.1lf,\t  y:%.1lf,\t  a:%.1lf\r\n", global_vel.x, global_vel.y, global_vel.a);
 			//otos_status_t status;
 			//otos->getStatus(status);
 			//usartprintf("Status Tilt:%d, Optic:%d, PAA Err:%d, LSM Err:%d\r\n", status.warnTiltAngle, status.warnOpticalTracking, status.errorPaa, status.errorLsm);
 
-		},500);
+		},200);
 
 		//BLINK LED
 		ledToggleSeq.interval([](){

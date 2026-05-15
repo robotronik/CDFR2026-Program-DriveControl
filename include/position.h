@@ -14,3 +14,8 @@ void setPosition(position_t incommingPos);
 void setPosition(double x, double y, double a);
 void setTarget(position_t incommingPos);
 void setTarget(double x, double y, double a);
+
+// Request OTOS parameter changes (these will be applied synchronously in updatePositionData)
+void requestLinearScalarChange(float scalar);
+void requestAngularScalarChange(float scalar);
+void requestOffsetChange(position_t offset);

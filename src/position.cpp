@@ -19,11 +19,42 @@ static position_t newTarget = {0.0, 0.0, 0.0};
 
 static bool needChangePos = false;
 
+// Pending OTOS parameter changes (requested from interrupt context, applied in main loop)
+static bool pending_linear_scalar_change = false;
+static float pending_linear_scalar = 1.0f;
+
+static bool pending_angular_scalar_change = false;
+static float pending_angular_scalar = 1.0f;
+
+static bool pending_offset_change = false;
+static position_t pending_offset = {0.0, 0.0, 0.0};
+
 void updatePositionData(){
     // Keep previous position and time to compute derivative
     static uint32_t _last_time_us = 0;
     // Exponential filter alpha for velocity
     static const float VELOCITY_ALPHA = 0.8f;
+    
+    // Apply any pending OTOS parameter changes (from interrupt context)
+    // These are applied first, before reading OTOS data
+    if (pending_linear_scalar_change) {
+        otos->setLinearScalar(pending_linear_scalar);
+        pending_linear_scalar_change = false;
+        delay_ms(20);
+    }
+    
+    if (pending_angular_scalar_change) {
+        otos->setAngularScalar(pending_angular_scalar);
+        pending_angular_scalar_change = false;
+        delay_ms(20);
+    }
+    
+    if (pending_offset_change) {
+        otos->setOffset(pending_offset);
+        pending_offset_change = false;
+        delay_ms(20);
+    }
+    
     if (needChangePos) {
         global_pos = newPosition;
         needChangePos = false;
@@ -113,4 +144,19 @@ void setTarget(double x, double y, double a) {
     newTarget.x = x;
     newTarget.y = y;
     newTarget.a = mod_angle(a);
+}
+
+void requestLinearScalarChange(float scalar) {
+    pending_linear_scalar = scalar;
+    pending_linear_scalar_change = true;
+}
+
+void requestAngularScalarChange(float scalar) {
+    pending_angular_scalar = scalar;
+    pending_angular_scalar_change = true;
+}
+
+void requestOffsetChange(position_t offset) {
+    pending_offset = offset;
+    pending_offset_change = true;
 }

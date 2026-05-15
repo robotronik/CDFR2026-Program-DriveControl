@@ -4,6 +4,7 @@
 #include "position.h"
 #include "I2C.h"
 #include "odometry/OTOS.h"
+#include "clock.h" // for delay_ms
 
 drive_interface::drive_interface(){}
 
@@ -119,10 +120,8 @@ void drive_interface::set_max_torque(double current){
 }
 
 void drive_interface::set_linear_scalar(float scalar) {
-    otos->setLinearScalar(scalar);
-    // reset the tracking
-    otos->resetTracking();
-    otos->setPosition(global_pos);
+    // Request scalar change - will be applied synchronously in updatePositionData
+    requestLinearScalarChange(scalar);
 }
 
 float drive_interface::get_linear_scalar() {
@@ -134,10 +133,8 @@ float drive_interface::get_linear_scalar() {
 }
 
 void drive_interface::set_angular_scalar(float scalar) {
-    otos->setAngularScalar(scalar);
-    // reset the tracking
-    otos->resetTracking();
-    otos->setPosition(global_pos);
+    // Request scalar change - will be applied synchronously in updatePositionData
+    requestAngularScalarChange(scalar);
 }
 
 float drive_interface::get_angular_scalar() {
@@ -149,11 +146,8 @@ float drive_interface::get_angular_scalar() {
 }
 
 void drive_interface::set_offset(position_t offset) {
-    position_t write_offset = offset;
-    otos->setOffset(write_offset);
-    // reset the tracking
-    otos->resetTracking();
-    otos->setPosition(global_pos);
+    // Request offset change - will be applied synchronously in updatePositionData
+    requestOffsetChange(offset);
 }
 
 position_t drive_interface::get_offset() {
