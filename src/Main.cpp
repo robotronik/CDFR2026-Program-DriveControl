@@ -77,7 +77,7 @@ int main(void)
 	*/
 	position_t otos_offset = {0.0, 0.0, -0.5f}; // Positive when needing to compensate for going forwared when going to the right
 	otos->setOffset(otos_offset);
-	otos->setLinearScalar(0.99f);
+	otos->setLinearScalar(1.002f);
 	otos->setAngularScalar(0.99f);
 
 	// Reset the position of the robot
