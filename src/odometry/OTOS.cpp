@@ -2,8 +2,10 @@
 #include "odometry/OTOS.h"
 #include "clock.h"
 
-I2CDevice* i2cDevice = nullptr;
-OTOS* otos = nullptr;
+I2CDevice* i2cDeviceLeft = nullptr;
+I2CDevice* i2cDeviceRight = nullptr;
+OTOS* otosLeft = nullptr;
+OTOS* otosRight = nullptr;
 
 OTOS::OTOS(I2CDevice* i2c_bus)
 {
@@ -15,9 +17,7 @@ OTOS::OTOS(I2CDevice* i2c_bus)
 
 return_t OTOS::begin()
 {
-    _commBus->setAddress(kDefaultAddress);
-    // Check the device address
-    if (_commBus->address() != kDefaultAddress)
+    if (_commBus->address() == 0)
         return ret_FAIL;
 
     // Just check if the device is connected, no other setup is needed

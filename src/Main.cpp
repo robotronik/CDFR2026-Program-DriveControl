@@ -13,6 +13,8 @@
 #include "button.h"
 #include "odometry/I2Cdevice.h"
 #include "odometry/OTOS.h"
+#include "odometry/odometry_fusion.h"
+
 
 void I2CRecieveData(uint8_t* data, int size) {
     I2CDataSwitch(data, size);
@@ -36,23 +38,28 @@ int main(void)
 	usartprintf("Starting...\n");
 	delay_ms(200);
 
-	i2cDevice = new I2CDevice(kDefaultAddress);
-	otos = new OTOS(i2cDevice);
+	odometry_config_t odo_cfg;
+	odo_cfg.sensor_spacing_mm = OTOS_SENSOR_SPACING_MM;
+	odo_cfg.lowpass_alpha = 0.6f;
+	odo_cfg.address_left = OTOS_LEFT_ADDRESS;
+	odo_cfg.address_right = OTOS_RIGHT_ADDRESS;
+	odometrySetup(odo_cfg);
 
 	wheelA =  new Wheel(DISTANCE_WHEEL,180, DIAMETER_WHEEL, motorA);
 	wheelB =  new Wheel(DISTANCE_WHEEL,-60, DIAMETER_WHEEL, motorB);
 	wheelC =  new Wheel(DISTANCE_WHEEL, 60, DIAMETER_WHEEL, motorC);
 
-	usartprintf("Looking for OTOS...\n");
+	usartprintf("Looking for OTOS left/right...\n");
 	RedLED_Toggle();
 
 	// Check the connection with the OTOS
-	while (otos->begin() != ret_OK) {
+	while ((otosLeft == nullptr) || (otosRight == nullptr) ||
+           (otosLeft->isConnected() != ret_OK) || (otosRight->isConnected() != ret_OK)) {
 		usartprintf("OTOS not connected\n");
 		RedLED_Toggle();
 		delay_ms(200); 
 	}
-	while (otos->selfTest() != ret_OK) {
+	while ((otosLeft->selfTest() != ret_OK) || (otosRight->selfTest() != ret_OK)) {
 		usartprintf("OTOS self-test failed\n");
 		RedLED_Toggle();
 		delay_ms(200); 
@@ -75,19 +82,18 @@ int main(void)
 	
 	delay_ms(100);
 	*/
-	position_t otos_offset = {0.0, 0.0, -0.5f}; // Positive when needing to compensate for going forwared when going to the right
-	otos->setOffset(otos_offset);
-	otos->setLinearScalar(1.002f);
-	otos->setAngularScalar(0.99f);
+	position_t otos_offset = {0.0, 0.0, 0.0};
+	otosLeft->setOffset(otos_offset);
+	otosRight->setOffset(otos_offset);
+	requestLinearScalarChange(1.0f);
+	requestAngularScalarChange(1.0f);
 
 	// Reset the position of the robot
-	otos->resetTracking();
+	otosLeft->resetTracking();
+	otosRight->resetTracking();
 	
-	if (otos->calibrateImu() == ret_OK)
-		usartprintf("OTOS IMU calibrated\n");
-	else {
-		usartprintf("OTOS IMU calibration failed\n");
-	}
+	odometryCalibrateImu();
+	usartprintf("OTOS IMU calibration requested\n");
 
 	setPosition(0, 0, 0);
 	setTarget(0, 0, 0);
@@ -129,6 +135,24 @@ int main(void)
 			//usartprintf("Status Tilt:%d, Optic:%d, PAA Err:%d, LSM Err:%d\r\n", status.warnTiltAngle, status.warnOpticalTracking, status.errorPaa, status.errorLsm);
 
 		},200);
+
+		dbg.interval([](){
+			const odometry_debug_t &dbg_data = odometryDebug();
+			usartprintf(">Lraw:%.1lf,%.1lf Rraw:%.1lf,%.1lf\r\n",
+				dbg_data.raw_left_vel.x, dbg_data.raw_left_vel.y,
+				dbg_data.raw_right_vel.x, dbg_data.raw_right_vel.y);
+			usartprintf(">Vf:%.1lf,%.1lf w:%.1lf imu:%.1lf\r\n",
+				dbg_data.fused_vel.x, dbg_data.fused_vel.y,
+				dbg_data.omega_otos, dbg_data.omega_imu);
+			usartprintf(">S:%.4lf aS:%.4lf\r\n",
+				dbg_data.scalar, dbg_data.angular_scalar);
+			usartprintf(">Pdiag:%.1lf,%.1lf,%.1lf,%.1lf,%.1lf,%.1lf\r\n",
+				dbg_data.cov_diag[0], dbg_data.cov_diag[1], dbg_data.cov_diag[2],
+				dbg_data.cov_diag[3], dbg_data.cov_diag[4], dbg_data.cov_diag[5]);
+			usartprintf(">Innov:%.1lf,%.1lf,%.1lf,%.1lf,%.1lf\r\n",
+				dbg_data.innovation[0], dbg_data.innovation[1], dbg_data.innovation[2],
+				dbg_data.innovation[3], dbg_data.innovation[4]);
+		},400);
 
 		//BLINK LED
 		ledToggleSeq.interval([](){

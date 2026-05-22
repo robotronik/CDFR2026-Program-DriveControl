@@ -118,3 +118,8 @@
 
 #define DISTANCE_WHEEL 160.0
 #define DIAMETER_WHEEL 60.0
+
+// Dual OTOS configuration
+#define OTOS_LEFT_ADDRESS 0x17
+#define OTOS_RIGHT_ADDRESS 0x18
+#define OTOS_SENSOR_SPACING_MM 120.0

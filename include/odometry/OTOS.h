@@ -437,5 +437,7 @@ class OTOS
     static constexpr float kInt16ToRpss = 1.0f / kRpssToInt16;
 };
 
-extern OTOS* otos;
-extern I2CDevice* i2cDevice;
+extern OTOS* otosLeft;
+extern OTOS* otosRight;
+extern I2CDevice* i2cDeviceLeft;
+extern I2CDevice* i2cDeviceRight;

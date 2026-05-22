@@ -59,6 +59,9 @@ void I2CDataSwitch(uint8_t* data, int size)
         case CMD_CALIBRATE_OTOS:
             robotI2cInterface->calibrate_otos();
             break;
+        case CMD_CALIBRATE_OTOS_SCALAR:
+            robotI2cInterface->calibrate_otos_scalar();
+            break;
         case CMD_GET_CURRENT:
             {
                 packed_motor_t current = robotI2cInterface->get_current();

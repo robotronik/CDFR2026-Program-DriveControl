@@ -39,7 +39,7 @@ typedef struct {
 } STRUCT_PACK packed_motor_t;
 
 // Increment this version number when the I2C protocol changes.
-#define DRIVE_I2C_VERSION 0x02
+#define DRIVE_I2C_VERSION 0x03
 #define DRIVE_I2C_ADRESS 42
 
 #define CMD_GET_VERSION 0x01
@@ -52,6 +52,7 @@ typedef struct {
 #define CMD_DISABLE 0x31
 #define CMD_ENABLE 0x32
 #define CMD_CALIBRATE_OTOS 0x33
+#define CMD_CALIBRATE_OTOS_SCALAR 0x34
 #define CMD_GET_CURRENT 0x41
 #define CMD_GET_SPEED 0x42
 #define CMD_SET_BRAKE_STATE 0x51
@@ -87,6 +88,9 @@ public:
 
     // Calibrate the otos, takes around 800ms and should be called when the robot is stationary.
     void calibrate_otos();
+
+    // Calibrate the OTOS scalar, rotate in place while this runs.
+    void calibrate_otos_scalar();
 
     packed_motor_t get_current(); // in Amps
     packed_motor_t get_speed(); // in rps

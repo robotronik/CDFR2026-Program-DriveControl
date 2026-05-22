@@ -15,7 +15,11 @@ void setPosition(double x, double y, double a);
 void setTarget(position_t incommingPos);
 void setTarget(double x, double y, double a);
 
-// Request OTOS parameter changes (these will be applied synchronously in updatePositionData)
+// Request odometry parameter changes (applied in updatePositionData)
 void requestLinearScalarChange(float scalar);
 void requestAngularScalarChange(float scalar);
 void requestOffsetChange(position_t offset);
+void requestScalarCalibration();
+
+float getLinearScalar();
+float getAngularScalar();
