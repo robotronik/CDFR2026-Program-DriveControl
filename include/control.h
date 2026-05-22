@@ -9,3 +9,4 @@ extern double angleToTarget;
 // The controller computes the distance and orientation error and then determines
 // command speeds using proportional gains.
 void updateWheels();
+void calculateSlip();

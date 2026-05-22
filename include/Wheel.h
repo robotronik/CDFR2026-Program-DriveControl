@@ -10,6 +10,8 @@ public:
 
     void update(double linear, double theta, double angular);
     void setSpeed(double speed);
+    double getSpeed();
+    bool isSlipping(double theta, double robotVelX, double robotVelY, double robotAngularVel);
 
 private:
     // The distance from the center of the robot to the wheel (in mm)

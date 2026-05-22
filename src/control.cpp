@@ -134,3 +134,14 @@ void updateWheels()
     wheelB->update(commandedLin, commandedAngle, commandAng);
     wheelC->update(commandedLin, commandedAngle, commandAng);
 }
+
+void calculateSlip(){
+    // Calculate slip based on wheel speeds and robot velocity
+    bool slipA = wheelA->isSlipping(global_pos.a, global_vel.x, global_vel.y, global_vel.a);
+    bool slipB = wheelB->isSlipping(global_pos.a, global_vel.x, global_vel.y, global_vel.a);
+    bool slipC = wheelC->isSlipping(global_pos.a, global_vel.x, global_vel.y, global_vel.a);
+    bool isSlipping = slipA || slipB || slipC;
+    if (isSlipping) {
+        //usartprintf("Slip detected! SlipA: %d, SlipB: %d, SlipC: %d\r\n", slipA, slipB, slipC);
+    }
+}

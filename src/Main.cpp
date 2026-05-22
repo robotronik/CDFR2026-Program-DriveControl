@@ -104,6 +104,7 @@ int main(void)
 		uint32_t start_time = micros();
 
 		updatePositionData();
+		calculateSlip();
 		updateWheels();
 
         if (isDebug) {

@@ -2,7 +2,6 @@
 #include "Wheel.h"
 #include "config.h"
 #include "types/structs.h"
-#include "position.h"
 
 Wheel* wheelA = nullptr; // WheelA at 0°
 Wheel* wheelB = nullptr; // WheelB at 120°
@@ -40,4 +39,28 @@ void Wheel::setSpeed(double speed) {
     double maxSpeed = 6.8; // in rps  (400 rpm motors)
     int speedPercent = 100 * speed / maxSpeed;
     motor->SetSpeedSigned(speedPercent); // Set the speed of the motor
+}
+
+// Returns the wheel speed in mm/s
+double Wheel::getSpeed() {
+    double circumference = PI * diam; // in mm
+    double speedRPS = motor->GetSpeed(); // in rps
+    return speedRPS * circumference; // in mm/s
+}
+
+// Return the slip of the wheel in mm/s, 
+// Positive slip means the wheel is moving faster than the robot,
+// Negative slip means the robot is moving faster than the wheel speed
+bool Wheel::isSlipping(double theta, double robotVelX, double robotVelY, double robotAngularVel) {
+    // Calculate the expected wheel speed based on robot velocity and wheel geometry
+    double rad = (angle + theta) * DEG_TO_RAD;
+    double expectedWheelSpeed = robotVelX * -sin(rad) + robotVelY * cos(rad) + distanceToCenter * robotAngularVel * DEG_TO_RAD;
+    double wheelSpeed = getSpeed();
+    if (abs(wheelSpeed) < 20) { // very low speed, consider no slip to avoid noise
+        return false;
+    }
+    if (abs(wheelSpeed - expectedWheelSpeed) > 50) { // slip threshold in mm/s
+        return true;
+    }
+    return false;
 }
