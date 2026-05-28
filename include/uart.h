@@ -1,7 +1,7 @@
 #pragma once
 
 // If debug is define, the code will be compiled with debug information
-#define MUTE_UART
+//#define MUTE_UART
 
 void usartSetup(void);
 

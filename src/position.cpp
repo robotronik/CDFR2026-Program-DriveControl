@@ -39,11 +39,13 @@ void updatePositionData(){
     if (pending_linear_scalar_change) {
         odometryRequestScalar(pending_linear_scalar);
         pending_linear_scalar_change = false;
+        usartprintf("Requested linear scalar change: %g\n", pending_linear_scalar);
     }
     
     if (pending_angular_scalar_change) {
         odometryRequestAngularScalar(pending_angular_scalar);
         pending_angular_scalar_change = false;
+        usartprintf("Requested angular scalar change: %g\n", pending_angular_scalar);
     }
     
     if (pending_offset_change) {
@@ -94,15 +96,6 @@ void updatePositionData(){
     }
 
     _last_time_us = now_us;
-    /*
-    position_t r_pos_std_dev;
-    if (otos->getPositionStdDev(r_pos_std_dev) == ret_OK){
-        global_pos_std_dev = r_pos_std_dev;
-    }
-    else{
-        RedLED_Set();
-    }
-        */
 }
 
 void setPosition(position_t incommingPos) {

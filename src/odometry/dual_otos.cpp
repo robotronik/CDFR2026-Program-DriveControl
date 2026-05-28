@@ -24,6 +24,7 @@ bool DualOtos::begin(const dual_otos_config_t &config)
     return left_ok && right_ok;
 }
 
+#include "uart.h"
 bool DualOtos::poll(otos_sample_t &left, otos_sample_t &right)
 {
     position_t pos_l, vel_l, acc_l;
