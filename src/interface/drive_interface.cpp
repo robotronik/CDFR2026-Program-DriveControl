@@ -143,12 +143,13 @@ float drive_interface::get_angular_scalar() {
 }
 
 void drive_interface::set_offset(position_t offset) {
-    // Request offset change - will be applied synchronously in updatePositionData
-    requestOffsetChange(offset);
+    // Offset support removed - this is now a no-op
+    (void)offset; // Suppress unused parameter warning
 }
 
 position_t drive_interface::get_offset() {
-    return odometryGetOffset();
+    // Offset support removed - return zero offset
+    return {0.0, 0.0, 0.0};
 }
 
 status_t drive_interface::get_status() {

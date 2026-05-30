@@ -5,7 +5,6 @@
 extern position_t global_pos;
 extern position_t global_pos_std_dev;
 extern position_t global_vel;
-extern position_t global_acc;
 extern position_t global_target;
 
 void updatePositionData();
@@ -18,7 +17,6 @@ void setTarget(double x, double y, double a);
 // Request odometry parameter changes (applied in updatePositionData)
 void requestLinearScalarChange(float scalar);
 void requestAngularScalarChange(float scalar);
-void requestOffsetChange(position_t offset);
 
 float getLinearScalar();
 float getAngularScalar();

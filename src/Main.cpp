@@ -49,55 +49,8 @@ int main(void)
 	wheelB =  new Wheel(DISTANCE_WHEEL,-60, DIAMETER_WHEEL, motorB);
 	wheelC =  new Wheel(DISTANCE_WHEEL, 60, DIAMETER_WHEEL, motorC);
 
-	usartprintf("Looking for OTOS left/right...\n");
-	RedLED_Toggle();
-
-	// Check the connection with the OTOS
-	while ((otosLeft == nullptr) || (otosRight == nullptr) ||
-           (otosLeft->isConnected() != ret_OK) || (otosRight->isConnected() != ret_OK)) {
-		usartprintf("OTOS not connected\n");
-		RedLED_Toggle();
-		delay_ms(200); 
-	}
-	while ((otosLeft->selfTest() != ret_OK) || (otosRight->selfTest() != ret_OK)) {
-		usartprintf("OTOS self-test failed\n");
-		RedLED_Toggle();
-		delay_ms(200); 
-	}
-	RedLED_Clear();
-	usartprintf("OTOS connected\n");
-
-	delay_ms(100);
-	// Set the OTOS settings
-	/*
-	otos_signal_process_config_t signalConfig;
-    otos->getSignalProcessConfig(signalConfig);
-	usartprintf("OTOS signal process before config: LUT:%d, Acc:%d, Rot:%d, Var:%d\n", signalConfig.enLut, signalConfig.enAcc, signalConfig.enRot, signalConfig.enVar);
-    
-	signalConfig.enLut = 1;
-	otos->setSignalProcessConfig(signalConfig);
-	delay_ms(100);
-    otos->getSignalProcessConfig(signalConfig);
-	usartprintf("OTOS signal process after config: LUT:%d, Acc:%d, Rot:%d, Var:%d\n", signalConfig.enLut, signalConfig.enAcc, signalConfig.enRot, signalConfig.enVar);
-	
-	delay_ms(100);
-	*/
-	position_t otos_offset = {0.0, 0.0, 0.0};
-	otosLeft->setOffset(otos_offset);
-	otosRight->setOffset(otos_offset);
-	otosLeft->setLinearScalar(0.999f);
-	otosRight->setLinearScalar(0.999f);
-	otosLeft->setAngularScalar(0.999f);
-	otosRight->setAngularScalar(0.999f);
 	requestLinearScalarChange(0.999f);
 	requestAngularScalarChange(0.999f);
-
-	// Reset the position of the robot
-	otosLeft->resetTracking();
-	otosRight->resetTracking();
-	
-	odometryCalibrateImu();
-	usartprintf("OTOS IMU calibration requested\n");
 
 	setPosition(0, 0, 0);
 	setTarget(0, 0, 0);
@@ -129,30 +82,8 @@ int main(void)
 			testMotors();
 
 		// Write the position to debug console
-        dbg.interval([](){
-			//usartprintf(">x:%.1lf+/-%.1lf mm, y:%.1lf+/-%.1lf mm, a:%.1lf+/-%.1lf deg\r\n", global_pos.x, global_pos_std_dev.x, global_pos.y, global_pos_std_dev.y, global_pos.a, global_pos_std_dev.a);
-			//usartprintf(">tx:%.1lf,\t ty:%.1lf,\t ta:%.1lf\r\n", global_target.x, global_target.y, global_target.a);
-			usartprintf(">x:%.2lf,y:%.2lf,a:%.2lf\r\n", global_pos.x, global_pos.y, global_pos.a);
-			usartprintf(">vx:%.2lf,vy:%.2lf,va:%.2lf\r\n", global_vel.x, global_vel.y, global_vel.a);
-			const odometry_debug_t &dbg_data = odometryDebug();
-			usartprintf(">sl:%.4lf,sr:%.4lf\r\n", dbg_data.scalar_left, dbg_data.scalar_right);
-			//otos_status_t status;
-			//otos->getStatus(status);
-			//usartprintf("Status Tilt:%d, Optic:%d, PAA Err:%d, LSM Err:%d\r\n", status.warnTiltAngle, status.warnOpticalTracking, status.errorPaa, status.errorLsm);
-			usartprintf(">a_gyro:%.2lf\r\n", dbg_data.angle_gyro);
-			/*
-			const odometry_debug_t &dbg_data = odometryDebug();
-			usartprintf(">Lraw_x:%.1lf,Lraw_y:%.1lf,Rraw_x:%.1lf,Rraw_y:%.1lf\r\n",
-				dbg_data.raw_left_vel.x, dbg_data.raw_left_vel.y,
-				dbg_data.raw_right_vel.x, dbg_data.raw_right_vel.y);
-			usartprintf(">Merged_x:%.1lf,Merged_y:%.1lf,w_merged:%.1lf\r\n",
-				dbg_data.merged_vel.x, dbg_data.merged_vel.y,
-				dbg_data.omega_merged);
-			usartprintf(">w_computed:%.1lf,w_gyro:%.1lf\r\n",
-				dbg_data.angle_dx, dbg_data.angle_gyro);
-			usartprintf(">S:%.4lf,aS:%.4lf\r\n",
-				dbg_data.scalar, dbg_data.angular_scalar);
-			*/
+		dbg.interval([](){
+			odometryDebugPrint();
 		},50);
 
 		//BLINK LED

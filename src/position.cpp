@@ -11,7 +11,6 @@
 position_t global_pos = {0.0, 0.0, 0.0}; // mm, mm, deg
 position_t global_pos_std_dev = {0.0, 0.0, 0.0}; // mm, mm, deg
 position_t global_vel = {0.0, 0.0, 0.0}; // mm/s, mm/s, deg/s
-position_t global_acc = {0.0, 0.0, 0.0}; // mm/s^2, mm/s^2, deg/s^2
 static position_t newPosition = {0.0, 0.0, 0.0};
 
 position_t global_target = {0.0, 0.0, 0.0};
@@ -25,9 +24,6 @@ static float pending_linear_scalar = 1.0f;
 
 static bool pending_angular_scalar_change = false;
 static float pending_angular_scalar = 1.0f;
-
-static bool pending_offset_change = false;
-static position_t pending_offset = {0.0, 0.0, 0.0};
 
 void updatePositionData(){
     // Keep previous position and time to compute derivative
@@ -46,18 +42,13 @@ void updatePositionData(){
         usartprintf("Requested angular scalar change: %g\n", pending_angular_scalar);
     }
     
-    if (pending_offset_change) {
-        odometryRequestOffset(pending_offset);
-        pending_offset_change = false;
-    }
+    // Offset support removed - position is now managed directly
     
     if (needChangePos) {
         global_pos = newPosition;
         needChangePos = false;
         odometryResetPose(global_pos);
-        global_vel.x = 0.0;
-        global_vel.y = 0.0;
-        global_vel.a = 0.0;
+        global_vel = {0.0, 0.0, 0.0};
         _last_time_us = micros();
     }
 
@@ -74,19 +65,8 @@ void updatePositionData(){
         dt = 0.004;
     }
 
+    // Odometry update directly sets global_pos and global_vel
     odometryUpdate(dt);
-
-    position_t fused_pos;
-    position_t fused_vel;
-    odometryGetPose(fused_pos, fused_vel);
-    global_pos = fused_pos;
-    global_vel = fused_vel;
-    global_acc = {0.0, 0.0, 0.0};
-
-    const odometry_debug_t &dbg = odometryDebug();
-    if (!dbg.left_ok && !dbg.right_ok) {
-        RedLED_Set();
-    }
 
     _last_time_us = now_us;
 }
@@ -120,11 +100,6 @@ void requestLinearScalarChange(float scalar) {
 void requestAngularScalarChange(float scalar) {
     pending_angular_scalar = scalar;
     pending_angular_scalar_change = true;
-}
-
-void requestOffsetChange(position_t offset) {
-    pending_offset = offset;
-    pending_offset_change = true;
 }
 
 float getLinearScalar() {
