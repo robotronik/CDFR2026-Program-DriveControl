@@ -29,8 +29,6 @@ static float pending_angular_scalar = 1.0f;
 static bool pending_offset_change = false;
 static position_t pending_offset = {0.0, 0.0, 0.0};
 
-static bool pending_scalar_calibration = false;
-
 void updatePositionData(){
     // Keep previous position and time to compute derivative
     static uint32_t _last_time_us = 0;
@@ -51,11 +49,6 @@ void updatePositionData(){
     if (pending_offset_change) {
         odometryRequestOffset(pending_offset);
         pending_offset_change = false;
-    }
-
-    if (pending_scalar_calibration) {
-        odometryStartScalarCalibration();
-        pending_scalar_calibration = false;
     }
     
     if (needChangePos) {
@@ -132,10 +125,6 @@ void requestAngularScalarChange(float scalar) {
 void requestOffsetChange(position_t offset) {
     pending_offset = offset;
     pending_offset_change = true;
-}
-
-void requestScalarCalibration() {
-    pending_scalar_calibration = true;
 }
 
 float getLinearScalar() {

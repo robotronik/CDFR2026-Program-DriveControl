@@ -78,7 +78,8 @@ void drive_interface::calibrate_otos(){
 }
 
 void drive_interface::calibrate_otos_scalar(){
-    requestScalarCalibration();
+    // Scalar calibration has been removed in favor of simplified OTOS fusion
+    // Set scalars manually using set_linear_scalar() and set_angular_scalar() if needed
 }
 
 packed_motor_t drive_interface::get_current() {

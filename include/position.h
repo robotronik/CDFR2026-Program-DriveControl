@@ -19,7 +19,6 @@ void setTarget(double x, double y, double a);
 void requestLinearScalarChange(float scalar);
 void requestAngularScalarChange(float scalar);
 void requestOffsetChange(position_t offset);
-void requestScalarCalibration();
 
 float getLinearScalar();
 float getAngularScalar();

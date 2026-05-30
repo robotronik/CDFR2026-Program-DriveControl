@@ -13,18 +13,25 @@ static odometry_debug_t g_dbg;
 // State: position and velocity
 static position_t g_pos = {0.0, 0.0, 0.0};
 static position_t g_vel = {0.0, 0.0, 0.0};
+static position_t g_vel_filtered = {0.0, 0.0, 0.0};
 static position_t g_offset = {0.0, 0.0, 0.0};
+
+// Previous sensor positions for delta calculation
+static position_t g_prev_pos_left = {0.0, 0.0, 0.0};
+static position_t g_prev_pos_right = {0.0, 0.0, 0.0};
 
 static float g_scalar = 1.0f;
 static float g_scalar_left = 1.0f;
 static float g_scalar_right = 1.0f;
-static bool g_scalar_pending = false;
 static float g_angular_scalar = 1.0f;
 
-static bool g_calib_active = false;
-static uint32_t g_calib_start_us = 0;
-static int g_calib_count = 0;
-static double g_calib_sum = 0.0;
+// Auto-calibration during rotation
+static double g_calib_left_sum = 0.0;
+static double g_calib_right_sum = 0.0;
+static int g_calib_left_count = 0;
+static int g_calib_right_count = 0;
+static constexpr double CALIB_MIN_LINEAR_VEL = 10.0;   // mm/s
+static constexpr double CALIB_MIN_ANGULAR_VEL = 5.0;  // deg/s
 
 void odometrySetup(const odometry_config_t &config)
 {
@@ -41,6 +48,22 @@ void odometrySetup(const odometry_config_t &config)
     otosRight = g_dual.right();
     i2cDeviceLeft = g_dual.leftBus();
     i2cDeviceRight = g_dual.rightBus();
+
+    // Configure signal processing: disable rotation of IMU/optical data by heading
+    if (otosLeft) {
+        otos_signal_process_config_t signal_config;
+        if (otosLeft->getSignalProcessConfig(signal_config) == ret_OK) {
+            signal_config.enRot = 0;  // Disable rotation - keep IMU and optical data in sensor frame
+            otosLeft->setSignalProcessConfig(signal_config);
+        }
+    }
+    if (otosRight) {
+        otos_signal_process_config_t signal_config;
+        if (otosRight->getSignalProcessConfig(signal_config) == ret_OK) {
+            signal_config.enRot = 0;  // Disable rotation - keep IMU and optical data in sensor frame
+            otosRight->setSignalProcessConfig(signal_config);
+        }
+    }
 }
 
 void odometrySetLowpassAlpha(float alpha)
@@ -63,7 +86,6 @@ void odometryRequestScalar(float scalar)
     g_scalar = scalar;
     g_scalar_left = scalar;
     g_scalar_right = scalar;
-    g_scalar_pending = true;
 }
 
 float odometryGetScalar()
@@ -86,19 +108,6 @@ float odometryGetAngularScalar()
     return g_angular_scalar;
 }
 
-void odometryStartScalarCalibration()
-{
-    g_calib_active = true;
-    g_calib_start_us = micros();
-    g_calib_count = 0;
-    g_calib_sum = 0.0;
-}
-
-bool odometryIsScalarCalibrating()
-{
-    return g_calib_active;
-}
-
 void odometryRequestOffset(const position_t &offset)
 {
     g_offset = offset;
@@ -119,182 +128,178 @@ void odometryCalibrateImu()
     }
 }
 
-static void update_scalar_calibration(double omega_computed, const otos_sample_t &left, const otos_sample_t &right)
-{
-    const double min_omega = 5.0;
-    const double min_vel = 5.0;
-
-    if (!g_calib_active || !left.ok || !right.ok) {
-        return;
-    }
-
-    if (fabs(omega_computed) < min_omega) {
-        return;
-    }
-
-    const double omega_rad = omega_computed * kDegToRad;
-    const double r_left_y = -g_cfg.sensor_spacing_mm * 0.5;
-    const double r_right_y = g_cfg.sensor_spacing_mm * 0.5;
-
-    if (fabs(left.vel_filtered.x) > min_vel) {
-        double sample = (omega_rad * r_left_y) / left.vel_filtered.x;
-        if (isfinite(sample)) {
-            g_calib_sum += fabs(sample);
-            g_calib_count++;
-        }
-    }
-
-    if (fabs(right.vel_filtered.x) > min_vel) {
-        double sample = (omega_rad * r_right_y) / right.vel_filtered.x;
-        if (isfinite(sample)) {
-            g_calib_sum += fabs(sample);
-            g_calib_count++;
-        }
-    }
-
-    uint32_t elapsed = micros() - g_calib_start_us;
-    if (g_calib_count >= 200 || elapsed > 2000000) {
-        if (g_calib_count > 0) {
-            odometryRequestScalar((float)(g_calib_sum / g_calib_count));
-        }
-        g_calib_active = false;
-    }
-}
+#include "uart.h"
 
 void odometryUpdate(double dt)
 {
-    otos_sample_t left_sample;
-    otos_sample_t right_sample;
+    position_t pos_l, vel_l, acc_l;
+    position_t pos_r, vel_r, acc_r;
 
-    g_dual.poll(left_sample, right_sample);
+    // Read position, velocity, and acceleration from both sensors
+    bool left_ok = (otosLeft && otosLeft->getPosVelAcc(pos_l, vel_l, acc_l) == ret_OK);
+    bool right_ok = (otosRight && otosRight->getPosVelAcc(pos_r, vel_r, acc_r) == ret_OK);
 
-    g_dbg.left_ok = left_sample.ok;
-    g_dbg.right_ok = right_sample.ok;
-    g_dbg.raw_left_vel = left_sample.ok ? left_sample.vel : position_t{0.0, 0.0, 0.0};
-    g_dbg.raw_right_vel = right_sample.ok ? right_sample.vel : position_t{0.0, 0.0, 0.0};
-    g_dbg.filt_left_vel = left_sample.ok ? left_sample.vel_filtered : position_t{0.0, 0.0, 0.0};
-    g_dbg.filt_right_vel = right_sample.ok ? right_sample.vel_filtered : position_t{0.0, 0.0, 0.0};
+    g_dbg.left_ok = left_ok;
+    g_dbg.right_ok = right_ok;
 
-    if (g_scalar_pending) {
-        g_scalar_pending = false;
+    if (!left_ok || !right_ok) {
+        // Not enough sensors, cannot update
+        return;
     }
 
-    position_t left_vel = left_sample.ok ? left_sample.vel_filtered : position_t{0.0, 0.0, 0.0};
-    position_t right_vel = right_sample.ok ? right_sample.vel_filtered : position_t{0.0, 0.0, 0.0};
-
-    left_vel.x *= g_scalar_left;
-    left_vel.y *= g_scalar_left;
-    right_vel.x *= g_scalar_right;
-    right_vel.y *= g_scalar_right;
-
-    // Compute omega from dual sensor velocity difference
-    double omega_computed = 0.0;
-    if (left_sample.ok && right_sample.ok && g_cfg.sensor_spacing_mm > 1.0f) {
-        double omega_rad = (right_vel.x - left_vel.x) / g_cfg.sensor_spacing_mm;
-        omega_computed = omega_rad * kRadToDeg;
-    }
-
-    // Get gyro readings from both sensors and average them
-    double omega_gyro = 0.0;
-    int gyro_count = 0;
-    if (left_sample.ok && isfinite(left_vel.a)) {
-        omega_gyro += left_vel.a;
-        gyro_count++;
-    }
-    if (right_sample.ok && isfinite(right_vel.a)) {
-        omega_gyro += right_vel.a;
-        gyro_count++;
-    }
-    if (gyro_count > 0) {
-        omega_gyro /= gyro_count;
-    } else {
-        omega_gyro = NAN;
-    }
-
-    // Merge omega sources: prefer velocity-computed when both sensors are moving,
-    // fall back to gyro readings otherwise
-    double omega_merged = NAN;
-    if (isfinite(omega_computed) && left_sample.ok && right_sample.ok && g_cfg.sensor_spacing_mm > 1.0f) {
-        // Both velocity difference and gyro available: use weighted average
-        // Weight velocity-computed omega higher when sensors are moving
-        bool moving = (fabs(left_vel.x) > 5.0 || fabs(left_vel.y) > 5.0 ||
-                       fabs(right_vel.x) > 5.0 || fabs(right_vel.y) > 5.0);
-        if (moving && isfinite(omega_gyro)) {
-            // Moving: blend both sources (velocity 0.6, gyro 0.4)
-            omega_merged = 0.6 * omega_computed + 0.4 * omega_gyro;
-        } else if (moving) {
-            // Moving but no gyro: use velocity-computed
-            omega_merged = omega_computed;
-        } else if (isfinite(omega_gyro)) {
-            // Stationary: prefer gyro as velocity difference becomes unreliable
-            omega_merged = omega_gyro;
-        } else {
-            // Stationary with no gyro: use velocity-computed
-            omega_merged = omega_computed;
-        }
-    } else if (isfinite(omega_gyro)) {
-        // Only gyro available: use it
-        omega_merged = omega_gyro;
-    } else if (isfinite(omega_computed)) {
-        // Only velocity-computed available: use it
-        omega_merged = omega_computed;
-    }
-
-    // Apply angular scalar to merged omega
-    if (isfinite(omega_merged)) {
-        omega_merged *= g_angular_scalar;
-    }
-
-    // Zero-velocity constraint: if both sensors report very low velocities, 
-    // force velocity measurements to zero to prevent drift
-    const double zero_vel_threshold = 10.0;  // mm/s
-    bool left_stationary = fabs(left_vel.x) < zero_vel_threshold && fabs(left_vel.y) < zero_vel_threshold;
-    bool right_stationary = fabs(right_vel.x) < zero_vel_threshold && fabs(right_vel.y) < zero_vel_threshold;
+    // Store raw sensor velocities for debugging
+    g_dbg.raw_left_vel = vel_l;
+    g_dbg.raw_right_vel = vel_r;
     
-    if (left_stationary && right_stationary && left_sample.ok && right_sample.ok) {
-        // Both sensors agree robot is stationary - force velocity to zero
-        left_vel.x = 0.0;
-        left_vel.y = 0.0;
-        right_vel.x = 0.0;
-        right_vel.y = 0.0;
-        omega_merged = 0.0;
-    }
+    // Calculate delta positions for each sensor (change since last update)
+    double dx_left = pos_l.x - g_prev_pos_left.x;
+    double dy_left = pos_l.y - g_prev_pos_left.y;
+    
+    double dx_right = pos_r.x - g_prev_pos_right.x;
+    double dy_right = pos_r.y - g_prev_pos_right.y;
 
-    // Merge sensors: average velocities from both sensors
-    position_t merged_vel = {0.0, 0.0, 0.0};
-    if (left_sample.ok && right_sample.ok) {
-        merged_vel.x = 0.5 * (left_vel.x + right_vel.x);
-        merged_vel.y = 0.5 * (left_vel.y + right_vel.y);
-        merged_vel.a = omega_merged;
-    } else if (left_sample.ok) {
-        merged_vel = left_vel;
-        merged_vel.a = omega_merged;
-    } else if (right_sample.ok) {
-        merged_vel = right_vel;
-        merged_vel.a = omega_merged;
-    }
+    // Update previous positions for next iteration
+    g_prev_pos_left = pos_l;
+    g_prev_pos_right = pos_r;
 
-    g_dbg.merged_vel = merged_vel;
-    g_dbg.omega_computed = omega_computed;
-    g_dbg.omega_gyro = omega_gyro;
-    g_dbg.omega_merged = omega_merged;
+    // Apply individual sensor scalars to correct for calibration differences
+    dx_left *= g_scalar_left;
+    dy_left *= g_scalar_left;
+    dx_right *= g_scalar_right;
+    dy_right *= g_scalar_right;
+
+    // Both sensors measure the same robot motion, but from different mount points
+    // Sensor geometry: left sensor at Y = -sensor_spacing/2, right sensor at Y = +sensor_spacing/2
+    // Both sensors have X pointing forward, Y pointing left (in robot's local frame)
+    
+    // Forward displacement is average of both sensors' X displacement (in robot frame)
+    double dx_robot_local = 0.5 * (dx_left + dx_right);
+    
+    // Lateral displacement is average of both sensors' Y displacement (in robot frame)
+    double dy_robot_local = 0.5 * (dy_left + dy_right);
+    
+    // Angular displacement from difference in forward motion
+    // When robot rotates, the two sensors move forward at different speeds
+    // omega = (dx_right - dx_left) / sensor_spacing_mm (in mm, result in radians)
+    double omega_rad = 0.0;
+    if (g_cfg.sensor_spacing_mm > 0.0) {
+        double d_dx = dx_right - dx_left;
+        omega_rad = d_dx / g_cfg.sensor_spacing_mm;  // Result is in radians
+    }
+    
+    // Rotate local frame deltas to global frame using current heading angle
+    double theta_rad = g_pos.a * kDegToRad;
+    double cos_theta = cos(theta_rad);
+    double sin_theta = sin(theta_rad);
+    
+    double dx_global = dx_robot_local * cos_theta - dy_robot_local * sin_theta;
+    double dy_global = dx_robot_local * sin_theta + dy_robot_local * cos_theta;
+    
+    // Get angular velocity from IMU (average of both sensors)
+    double omega_velocity = 0.5 * (vel_l.a + vel_r.a);  // This is in deg/s or rad/s depending on OTOS config
+    
+    // Compute raw velocity from position deltas
+    double vel_x_raw = dx_global / dt;
+    double vel_y_raw = dy_global / dt;
+    double vel_a_raw = omega_velocity * g_angular_scalar;
+
+    double alpha = g_cfg.lowpass_alpha;
+    // Apply low-pass filter to smooth velocity
+    g_vel_filtered.x = alpha * g_vel_filtered.x + (1.0 - alpha) * vel_x_raw;
+    g_vel_filtered.y = alpha * g_vel_filtered.y + (1.0 - alpha) * vel_y_raw;
+    g_vel_filtered.a = alpha * g_vel_filtered.a + (1.0 - alpha) * vel_a_raw;
+    
+    // Use filtered velocity for output
+    g_vel = g_vel_filtered;
+    
+    // Auto-calibration: refine scalars during pure rotation
+    double linear_vel_mag = sqrt(g_vel.x * g_vel.x + g_vel.y * g_vel.y);
+    double angular_vel_mag = fabs(omega_velocity);
+
+    static double actual_vel_x_left = 0;
+    static double actual_vel_x_right = 0;
+    double vel_x_left_raw = dx_left / dt;
+    double vel_x_right_raw = dx_right / dt;
+    actual_vel_x_left = alpha * actual_vel_x_left + (1.0 - alpha) * vel_x_left_raw;
+    actual_vel_x_right = alpha * actual_vel_x_right + (1.0 - alpha) * vel_x_right_raw;
+    
+    // If the robot is rotating in place (low linear velocity, sufficient angular velocity), we can use the known geometry to estimate the correct scalars for each sensor
+    if (linear_vel_mag < CALIB_MIN_LINEAR_VEL && angular_vel_mag > CALIB_MIN_ANGULAR_VEL) {
+        // Robot is rotating in place - good for calibration
+        
+        // Convert omega_velocity (deg/s) to rad/s for calculation
+        double omega_rad_from_vel = omega_velocity * kDegToRad;
+        double sensor_radius = g_cfg.sensor_spacing_mm * 0.5;
+        
+        // Expected forward velocities from pure rotation
+        double expected_vx_left = -omega_rad_from_vel * sensor_radius;
+        double expected_vx_right = omega_rad_from_vel * sensor_radius;
+        
+        // Compute actual velocities from unscaled position deltas (before we applied scalars)
+        // This isolates the optical sensor data from our correction factors
+
+        // Calculate scalar samples from actual velocities
+        if (fabs(actual_vel_x_left) > 1.0) {  // Avoid division by near-zero
+            double sample_left = expected_vx_left / actual_vel_x_left;
+            if (isfinite(sample_left) && sample_left > 0.1 && sample_left < 2.0) {
+                g_calib_left_sum += sample_left;
+                g_calib_left_count++;
+            }
+        }
+        
+        if (fabs(actual_vel_x_right) > 1.0) {  // Avoid division by near-zero
+            double sample_right = expected_vx_right / actual_vel_x_right;
+            if (isfinite(sample_right) && sample_right > 0.1 && sample_right < 2.0) {
+                g_calib_right_sum += sample_right;
+                g_calib_right_count++;
+            }
+        }
+        
+        // Check if we have enough calibration samples
+        if (g_calib_left_count >= 20 && g_calib_right_count >= 20) {
+            // Calculate average scalars
+            double new_left = g_scalar_left * g_calib_left_sum / g_calib_left_count;
+            double new_right = g_scalar_right * g_calib_right_sum / g_calib_right_count;
+            g_scalar_left = new_left * 0.5 + g_scalar_left * 0.5;
+            g_scalar_right = new_right * 0.5 + g_scalar_right * 0.5;
+            
+            // Reset calibration state
+            g_calib_left_sum = 0.0;
+            g_calib_right_sum = 0.0;
+            g_calib_left_count = 0;
+            g_calib_right_count = 0;
+        }
+    }
+    
+    g_pos.x += dx_global;
+    g_pos.y += dy_global;
+    g_pos.a = mod_angle(g_pos.a + omega_rad * kRadToDeg * g_angular_scalar);
+
+    // Store debug info
+    g_dbg.filt_left_vel = vel_l;
+    g_dbg.filt_right_vel = vel_r;
+    g_dbg.merged_vel.x = g_vel.x;
+    g_dbg.merged_vel.y = g_vel.y;
+    g_dbg.merged_vel.a = g_vel.a;
+    g_dbg.omega_computed = omega_rad * kRadToDeg;
+    g_dbg.omega_gyro = omega_velocity;
+    g_dbg.omega_merged = g_vel.a;
     g_dbg.scalar = g_scalar;
     g_dbg.angular_scalar = g_angular_scalar;
-
-    update_scalar_calibration(omega_computed, left_sample, right_sample);
-
-    // Simple dead reckoning: integrate velocity and angle
-    g_vel = merged_vel;
-
-    g_pos.x += merged_vel.x * dt;
-    g_pos.y += merged_vel.y * dt;
-    g_pos.a = mod_angle(g_pos.a + merged_vel.a * dt);
+    g_dbg.scalar_left = g_scalar_left;
+    g_dbg.scalar_right = g_scalar_right;
 }
 
 void odometryResetPose(const position_t &pose)
 {
     g_pos = pose;
     g_vel = {0.0, 0.0, 0.0};
+    g_vel_filtered = {0.0, 0.0, 0.0};
+    // Reset calibration state
+    g_calib_left_sum = 0.0;
+    g_calib_right_sum = 0.0;
+    g_calib_left_count = 0;
+    g_calib_right_count = 0;
 }
 
 void odometryGetPose(position_t &pos, position_t &vel)

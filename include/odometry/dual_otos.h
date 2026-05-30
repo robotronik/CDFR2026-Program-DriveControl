@@ -16,7 +16,7 @@ struct otos_sample_t {
 struct dual_otos_config_t {
     uint8_t address_left = kDefaultAddress;
     uint8_t address_right = (uint8_t)(kDefaultAddress + 1);
-    float lowpass_alpha = 0.6f;
+    float lowpass_alpha = 0.75f;
 };
 
 class DualOtos

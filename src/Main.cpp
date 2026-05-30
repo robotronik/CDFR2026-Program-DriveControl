@@ -40,7 +40,7 @@ int main(void)
 
 	odometry_config_t odo_cfg;
 	odo_cfg.sensor_spacing_mm = OTOS_SENSOR_SPACING_MM;
-	odo_cfg.lowpass_alpha = 0.6f;
+	odo_cfg.lowpass_alpha = 0.75f;
 	odo_cfg.address_left = OTOS_LEFT_ADDRESS;
 	odo_cfg.address_right = OTOS_RIGHT_ADDRESS;
 	odometrySetup(odo_cfg);
@@ -128,13 +128,15 @@ int main(void)
         dbg.interval([](){
 			//usartprintf(">x:%.1lf+/-%.1lf mm, y:%.1lf+/-%.1lf mm, a:%.1lf+/-%.1lf deg\r\n", global_pos.x, global_pos_std_dev.x, global_pos.y, global_pos_std_dev.y, global_pos.a, global_pos_std_dev.a);
 			//usartprintf(">tx:%.1lf,\t ty:%.1lf,\t ta:%.1lf\r\n", global_target.x, global_target.y, global_target.a);
-			usartprintf("> x:%.1lf,y:%.1lf,a:%.1lf\r\n", global_pos.x, global_pos.y, global_pos.a);
-			//usartprintf("> x:%.1lf,\t  y:%.1lf,\t  a:%.1lf\r\n", global_vel.x, global_vel.y, global_vel.a);
+			//usartprintf(">x:%.2lf,y:%.2lf,a:%.2lf\r\n", global_pos.x, global_pos.y, global_pos.a);
+			usartprintf(">vx:%.2lf,vy:%.2lf,va:%.2lf\r\n", global_vel.x, global_vel.y, global_vel.a);
+			const odometry_debug_t &dbg_data = odometryDebug();
+			usartprintf(">sl:%.4lf,sr:%.4lf\r\n", dbg_data.scalar_left, dbg_data.scalar_right);
 			//otos_status_t status;
 			//otos->getStatus(status);
 			//usartprintf("Status Tilt:%d, Optic:%d, PAA Err:%d, LSM Err:%d\r\n", status.warnTiltAngle, status.warnOpticalTracking, status.errorPaa, status.errorLsm);
 
-			
+			/*
 			const odometry_debug_t &dbg_data = odometryDebug();
 			usartprintf(">Lraw_x:%.1lf,Lraw_y:%.1lf,Rraw_x:%.1lf,Rraw_y:%.1lf\r\n",
 				dbg_data.raw_left_vel.x, dbg_data.raw_left_vel.y,
@@ -146,8 +148,8 @@ int main(void)
 				dbg_data.omega_computed, dbg_data.omega_gyro);
 			usartprintf(">S:%.4lf,aS:%.4lf\r\n",
 				dbg_data.scalar, dbg_data.angular_scalar);
-			
-		},200);
+			*/
+		},50);
 
 		//BLINK LED
 		ledToggleSeq.interval([](){
