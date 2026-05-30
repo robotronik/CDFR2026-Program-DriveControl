@@ -158,10 +158,6 @@ void odometryUpdate(double dt)
     double dx_right = pos_r.x - g_prev_pos_right.x;
     double dy_right = pos_r.y - g_prev_pos_right.y;
 
-    // Update previous positions for next iteration
-    g_prev_pos_left = pos_l;
-    g_prev_pos_right = pos_r;
-
     // Apply individual sensor scalars to correct for calibration differences
     dx_left *= g_scalar_left;
     dy_left *= g_scalar_left;
@@ -180,13 +176,14 @@ void odometryUpdate(double dt)
     
     // Angular displacement from difference in forward motion
     // When robot rotates, the two sensors move forward at different speeds
-    // omega = (dx_right - dx_left) / sensor_spacing_mm (in mm, result in radians)
-    double omega_rad = 0.0;
-    if (g_cfg.sensor_spacing_mm > 0.0) {
-        double d_dx = dx_right - dx_left;
-        omega_rad = d_dx / g_cfg.sensor_spacing_mm;  // Result is in radians
-    }
-    
+    // omega = (dx_right - dx_left) / sensor_spacing_mm
+    double delta_angle_from_dx = 0.0;
+    double d_dx = dx_right - dx_left;
+    double omega_rad = d_dx / g_cfg.sensor_spacing_mm;  // Result is in radians
+    delta_angle_from_dx = kRadToDeg * omega_rad;  // Convert to degrees
+
+    double angle_gyro = 0.5 * (pos_l.a + pos_r.a);
+
     // Rotate local frame deltas to global frame using current heading angle
     double theta_rad = g_pos.a * kDegToRad;
     double cos_theta = cos(theta_rad);
@@ -196,7 +193,7 @@ void odometryUpdate(double dt)
     double dy_global = dx_robot_local * sin_theta + dy_robot_local * cos_theta;
     
     // Get angular velocity from IMU (average of both sensors)
-    double omega_velocity = 0.5 * (vel_l.a + vel_r.a);  // This is in deg/s or rad/s depending on OTOS config
+    double omega_velocity = 0.5 * (vel_l.a + vel_r.a);  // This is in deg/s
     
     // Compute raw velocity from position deltas
     double vel_x_raw = dx_global / dt;
@@ -207,7 +204,7 @@ void odometryUpdate(double dt)
     // Apply low-pass filter to smooth velocity
     g_vel_filtered.x = alpha * g_vel_filtered.x + (1.0 - alpha) * vel_x_raw;
     g_vel_filtered.y = alpha * g_vel_filtered.y + (1.0 - alpha) * vel_y_raw;
-    g_vel_filtered.a = alpha * g_vel_filtered.a + (1.0 - alpha) * vel_a_raw;
+    g_vel_filtered.a = vel_a_raw;
     
     // Use filtered velocity for output
     g_vel = g_vel_filtered;
@@ -218,8 +215,8 @@ void odometryUpdate(double dt)
 
     static double actual_vel_x_left = 0;
     static double actual_vel_x_right = 0;
-    double vel_x_left_raw = dx_left / dt;
-    double vel_x_right_raw = dx_right / dt;
+    double vel_x_left_raw = (pos_l.x - g_prev_pos_left.x) / dt;
+    double vel_x_right_raw = (pos_r.x - g_prev_pos_right.x) / dt;
     actual_vel_x_left = alpha * actual_vel_x_left + (1.0 - alpha) * vel_x_left_raw;
     actual_vel_x_right = alpha * actual_vel_x_right + (1.0 - alpha) * vel_x_right_raw;
     
@@ -256,12 +253,12 @@ void odometryUpdate(double dt)
         }
         
         // Check if we have enough calibration samples
-        if (g_calib_left_count >= 20 && g_calib_right_count >= 20) {
+        if (g_calib_left_count >= 50 && g_calib_right_count >= 50) {
             // Calculate average scalars
-            double new_left = g_scalar_left * g_calib_left_sum / g_calib_left_count;
-            double new_right = g_scalar_right * g_calib_right_sum / g_calib_right_count;
-            g_scalar_left = new_left * 0.5 + g_scalar_left * 0.5;
-            g_scalar_right = new_right * 0.5 + g_scalar_right * 0.5;
+            double new_left = g_calib_left_sum / g_calib_left_count;
+            double new_right = g_calib_right_sum / g_calib_right_count;
+            //g_scalar_left = new_left * 0.3 + g_scalar_left * 0.7;
+            //g_scalar_right = new_right * 0.3 + g_scalar_right * 0.7;
             
             // Reset calibration state
             g_calib_left_sum = 0.0;
@@ -273,7 +270,11 @@ void odometryUpdate(double dt)
     
     g_pos.x += dx_global;
     g_pos.y += dy_global;
-    g_pos.a = mod_angle(g_pos.a + omega_rad * kRadToDeg * g_angular_scalar);
+    //g_pos.a = mod_angle(g_pos.a + delta_angle_from_dx * g_angular_scalar);
+    g_pos.a = angle_gyro;  // Use gyro angle directly for better stability
+
+    static double angle_from_dx = 0.0;
+    angle_from_dx += delta_angle_from_dx * g_angular_scalar;
 
     // Store debug info
     g_dbg.filt_left_vel = vel_l;
@@ -281,13 +282,17 @@ void odometryUpdate(double dt)
     g_dbg.merged_vel.x = g_vel.x;
     g_dbg.merged_vel.y = g_vel.y;
     g_dbg.merged_vel.a = g_vel.a;
-    g_dbg.omega_computed = omega_rad * kRadToDeg;
-    g_dbg.omega_gyro = omega_velocity;
+    g_dbg.angle_dx = angle_from_dx;
+    g_dbg.angle_gyro = angle_gyro;
     g_dbg.omega_merged = g_vel.a;
     g_dbg.scalar = g_scalar;
     g_dbg.angular_scalar = g_angular_scalar;
     g_dbg.scalar_left = g_scalar_left;
     g_dbg.scalar_right = g_scalar_right;
+
+    // Update previous positions for next iteration
+    g_prev_pos_left = pos_l;
+    g_prev_pos_right = pos_r;
 }
 
 void odometryResetPose(const position_t &pose)

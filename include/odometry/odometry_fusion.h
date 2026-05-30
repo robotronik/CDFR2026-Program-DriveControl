@@ -4,7 +4,7 @@
 #include "odometry/dual_otos.h"
 
 struct odometry_config_t {
-    float sensor_spacing_mm = 120.0f;
+    float sensor_spacing_mm = 100.0f;
     float lowpass_alpha = 0.75f;
     uint8_t address_left = kDefaultAddress;
     uint8_t address_right = (uint8_t)(kDefaultAddress + 1);
@@ -16,8 +16,8 @@ struct odometry_debug_t {
     position_t filt_left_vel;
     position_t filt_right_vel;
     position_t merged_vel;
-    double omega_computed = 0.0;    // Angular velocity from position delta
-    double omega_gyro = 0.0;         // Angular velocity from IMU average
+    double angle_dx = 0.0;    // Angular velocity from position delta
+    double angle_gyro = 0.0;         // Angular velocity from IMU average
     double omega_merged = 0.0;       // Final merged angular velocity
     double scalar = 1.0;
     double angular_scalar = 1.0;
