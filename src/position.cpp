@@ -54,7 +54,6 @@ void updatePositionData(){
 
     global_target = newTarget;
     
-    RedLED_Clear();
     uint32_t now_us = micros();
     double dt = 0.0;
     if (_last_time_us != 0) {
@@ -104,8 +103,4 @@ void requestAngularScalarChange(float scalar) {
 
 float getLinearScalar() {
     return odometryGetScalar();
-}
-
-float getAngularScalar() {
-    return odometryGetAngularScalar();
 }

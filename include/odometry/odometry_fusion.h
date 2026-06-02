@@ -18,7 +18,8 @@ void odometrySetLowpassAlpha(float alpha);
 void odometryRequestScalar(float scalar);
 float odometryGetScalar();
 void odometryRequestAngularScalar(float scalar);
-float odometryGetAngularScalar();
 
 void odometryCalibrateImu();
 void odometryDebugPrint();
+
+extern bool is_odometry_ok;

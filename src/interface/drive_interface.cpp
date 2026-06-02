@@ -139,7 +139,7 @@ void drive_interface::set_angular_scalar(float scalar) {
 }
 
 float drive_interface::get_angular_scalar() {
-    return getAngularScalar();
+    return 1.0f; // TODO Remove
 }
 
 void drive_interface::set_offset(position_t offset) {

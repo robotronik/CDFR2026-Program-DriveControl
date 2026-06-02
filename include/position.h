@@ -19,4 +19,3 @@ void requestLinearScalarChange(float scalar);
 void requestAngularScalarChange(float scalar);
 
 float getLinearScalar();
-float getAngularScalar();

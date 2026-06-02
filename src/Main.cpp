@@ -27,15 +27,17 @@ int main(void)
 {
 	//SETUP
 	clock_setup();
-	setupDeviceI2C();
 	ledSetup();
+	RedLED_Set();
     buttonSetup();
 	usartSetup();
 	DriveSetup();
+	setupDeviceI2C();
 	i2c_setup();
 	setCallbackReceive(I2CRecieveData);
 
 	usartprintf("Starting...\n");
+
 	delay_ms(200);
 
 	odometry_config_t odo_cfg;
@@ -50,11 +52,12 @@ int main(void)
 	wheelC =  new Wheel(DISTANCE_WHEEL, 60, DIAMETER_WHEEL, motorC);
 
 	requestLinearScalarChange(0.999f);
-	requestAngularScalarChange(0.999f);
+	requestAngularScalarChange(0.992f);
 
 	setPosition(0, 0, 0);
 	setTarget(0, 0, 0);
 	
+	RedLED_Clear();
 //
 //	Main Loop of the robot
 //
@@ -84,11 +87,18 @@ int main(void)
 		// Write the position to debug console
 		dbg.interval([](){
 			odometryDebugPrint();
-		},50);
+		},100);
 
 		//BLINK LED
 		ledToggleSeq.interval([](){
-			GreenLED_Toggle();
+			if (!is_odometry_ok){
+				GreenLED_Clear();
+				RedLED_Toggle();
+			}
+			else {
+				RedLED_Clear();
+				GreenLED_Toggle();
+			}
 		},250);
 
 		while (micros() - start_time < 4000); // 250Hz loop
@@ -102,6 +112,8 @@ int main(void)
 // Accelerate Forward -> Decelerate Forward -> Accelerate backward -> Decelerate backward
 //
 void testMotors(){
+	setPosition(0, 0, 0);
+	return;
     DriveEnable();
 	ResetDrive();
 	double s = 30.0;

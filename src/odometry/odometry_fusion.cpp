@@ -33,6 +33,8 @@ static position_t filtered_vel_right = {0.0, 0.0, 0.0};
 static position_t g_prev_pos_left = {0.0, 0.0, 0.0};
 static position_t g_prev_pos_right = {0.0, 0.0, 0.0};
 
+bool is_odometry_ok = false;
+
 static float g_scalar_left = 1.0f;
 static float g_scalar_right = 1.0f;
 static float g_angular_scalar = 1.0f;
@@ -42,8 +44,8 @@ static double g_calib_left_sum = 0.0;
 static double g_calib_right_sum = 0.0;
 static int g_calib_left_count = 0;
 static int g_calib_right_count = 0;
-static constexpr double CALIB_MIN_LINEAR_VEL = 10.0;   // mm/s
-static constexpr double CALIB_MIN_ANGULAR_VEL = 5.0;  // deg/s
+static constexpr double CALIB_MAX_LINEAR_VEL = 20.0;   // mm/s
+static constexpr double CALIB_MIN_ANGULAR_VEL = 50.0;  // deg/s
 
 void odometrySetup(const odometry_config_t &config)
 {
@@ -98,24 +100,27 @@ void odometrySetup(const odometry_config_t &config)
     usartprintf("OTOS IMU calibration requested\n");
     delay_ms(100);
 
+    // Mark odometry as operational
+    is_odometry_ok = true;
+
     // Configure signal processing: disable rotation and Kalman filter
     if (otosLeft) {
         otos_signal_process_config_t signal_config;
         if (otosLeft->getSignalProcessConfig(signal_config) == ret_OK) {
-            signal_config.enLut = 0;   // Disable internal lookup table calibration for optical sensor
+            signal_config.enLut = 1;   // Disable internal lookup table calibration for optical sensor
             signal_config.enRot = 0;   // Disable rotation - keep IMU and optical data in sensor frame
-            signal_config.enAcc = 0;   // Disable accelerometer data in Kalman filter
-            signal_config.enVar = 0;   // Disable Kalman filter (set variance to 0) to get raw integrated position
+            signal_config.enAcc = 1;   // Disable accelerometer data in Kalman filter
+            signal_config.enVar = 1;   // Disable Kalman filter (set variance to 0) to get raw integrated position
             otosLeft->setSignalProcessConfig(signal_config);
         }
     }
     if (otosRight) {
         otos_signal_process_config_t signal_config;
         if (otosRight->getSignalProcessConfig(signal_config) == ret_OK) {
-            signal_config.enLut = 0;   // Disable internal lookup table calibration for optical sensor
+            signal_config.enLut = 1;   // Disable internal lookup table calibration for optical sensor
             signal_config.enRot = 0;   // Disable rotation - keep IMU and optical data in sensor frame
-            signal_config.enAcc = 0;   // Disable accelerometer data in Kalman filter
-            signal_config.enVar = 0;   // Disable Kalman filter (set variance to 0) to get raw integrated position
+            signal_config.enAcc = 1;   // Disable accelerometer data in Kalman filter
+            signal_config.enVar = 1;   // Disable Kalman filter (set variance to 0) to get raw integrated position
             otosRight->setSignalProcessConfig(signal_config);
         }
     }
@@ -144,17 +149,8 @@ float odometryGetScalar()
 
 void odometryRequestAngularScalar(float scalar)
 {
-    if (scalar < 0.7f) {
-        scalar = 0.7f;
-    } else if (scalar > 1.3f) {
-        scalar = 1.3f;
-    }
-    g_angular_scalar = scalar;
-}
-
-float odometryGetAngularScalar()
-{
-    return g_angular_scalar;
+    otosLeft->setAngularScalar(scalar);
+    otosRight->setAngularScalar(scalar);
 }
 
 
@@ -169,6 +165,12 @@ void odometryCalibrateImu()
     }
 }
 
+double averageAngle(double a1, double a2) {
+    double x = cos(a1 * kDegToRad) + cos(a2 * kDegToRad);
+    double y = sin(a1 * kDegToRad) + sin(a2 * kDegToRad);
+    return atan2(y, x) * kRadToDeg;
+}
+
 void odometryUpdate(double dt)
 {
     position_t pos_l, vel_l, acc_l;
@@ -180,8 +182,12 @@ void odometryUpdate(double dt)
 
     if (!left_ok || !right_ok) {
         // Not enough sensors, cannot update
+        is_odometry_ok = false;
         return;
     }
+    
+    // Sensors are responding
+    is_odometry_ok = true;
     
     // Calculate delta positions for each sensor (change since last update)
     double dx_left = pos_l.x - g_prev_pos_left.x;
@@ -214,7 +220,7 @@ void odometryUpdate(double dt)
     double omega_rad = d_dx / g_cfg.sensor_spacing_mm;  // Result is in radians
     delta_angle_from_dx = kRadToDeg * omega_rad;  // Convert to degrees
 
-    double angle_imu = 0.5 * (pos_l.a + pos_r.a);
+    double angle_imu = averageAngle(pos_l.a, pos_r.a);
 
     // Rotate local frame deltas to global frame using current heading angle
     double theta_rad = global_pos.a * kDegToRad;
@@ -252,7 +258,7 @@ void odometryUpdate(double dt)
     filtered_vel_right.y = alpha * filtered_vel_right.y + (1.0 - alpha) * vel_y_right_raw;
     
     // If the robot is rotating in place (low linear velocity, sufficient angular velocity), we can use the known geometry to estimate the correct scalars for each sensor
-    if (linear_vel_mag < CALIB_MIN_LINEAR_VEL && angular_vel_mag > CALIB_MIN_ANGULAR_VEL) {
+    if (linear_vel_mag < CALIB_MAX_LINEAR_VEL && angular_vel_mag > CALIB_MIN_ANGULAR_VEL) {
         // Robot is rotating in place - good for calibration
         
         // Convert omega_velocity (deg/s) to rad/s for calculation
@@ -284,10 +290,12 @@ void odometryUpdate(double dt)
         }
         
         // Check if we have enough calibration samples
-        if (g_calib_left_count >= 50 && g_calib_right_count >= 50) {
+        if (g_calib_left_count >= 10 && g_calib_right_count >= 10) {
             // Calculate average scalars (commented out for now)
-            // double new_left = g_calib_left_sum / g_calib_left_count;
-            // double new_right = g_calib_right_sum / g_calib_right_count;
+            double new_left = g_calib_left_sum / g_calib_left_count;
+            double new_right = g_calib_right_sum / g_calib_right_count;
+
+            usartprintf(">sl:%.3f,sr:%.3f\r\n", new_left, new_right);
             
             // Reset calibration state
             g_calib_left_sum = 0.0;
@@ -303,6 +311,11 @@ void odometryUpdate(double dt)
     global_pos.a = angle_imu;  // Use gyro angle directly for better stability
 
     angle_from_dx += delta_angle_from_dx * g_angular_scalar;
+    if (angle_from_dx > 180.0) {
+        angle_from_dx -= 360.0;
+    } else if (angle_from_dx < -180.0) {
+        angle_from_dx += 360.0;
+    }
 
     // Store debug info
     g_debug_imu_left_vel = vel_l;
@@ -329,13 +342,14 @@ void odometryResetPose(position_t pose)
 
 void odometryDebugPrint()
 {
-    usartprintf(">x:%.2lf,y:%.2lf,a:%.2lf\r\n", global_pos.x, global_pos.y, global_pos.a);
-    usartprintf(">vx:%.2lf,vy:%.2lf,va:%.2lf\r\n", global_vel.x, global_vel.y, global_vel.a);
-    usartprintf(">a_dx:%.2lf\r\n", angle_from_dx);
-    usartprintf(">Limu_x:%.1lf,Limu_y:%.1lf,Rimuw_x:%.1lf,Rimu_y:%.1lf\r\n",
+    usartprintf(">x:%.2lf,y:%.2lf,a:%.2lf,vx:%.2lf,vy:%.2lf,va:%.2lf,a_dx:%.2lf,"
+                "Limu_x:%.1lf,Limu_y:%.1lf,Rimuw_x:%.1lf,Rimu_y:%.1lf,"
+                "Lraw_x:%.1lf,Lraw_y:%.1lf,Rraw_x:%.1lf,Rraw_y:%.1lf\r\n",
+        global_pos.x, global_pos.y, global_pos.a,
+        global_vel.x, global_vel.y, global_vel.a,
+        angle_from_dx,
         g_debug_imu_left_vel.x, g_debug_imu_left_vel.y,
-        g_debug_imu_right_vel.x, g_debug_imu_right_vel.y);
-    usartprintf(">Lraw_x:%.1lf,Lraw_y:%.1lf,Rraw_x:%.1lf,Rraw_y:%.1lf\r\n",
+        g_debug_imu_right_vel.x, g_debug_imu_right_vel.y,
         filtered_vel_left.x, filtered_vel_left.y,
         filtered_vel_right.x, filtered_vel_right.y);
 }
