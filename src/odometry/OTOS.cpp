@@ -2,11 +2,6 @@
 #include "odometry/OTOS.h"
 #include "clock.h"
 
-I2CDevice* i2cDeviceLeft = nullptr;
-I2CDevice* i2cDeviceRight = nullptr;
-OTOS* otosLeft = nullptr;
-OTOS* otosRight = nullptr;
-
 OTOS::OTOS(I2CDevice* i2c_bus)
 {
     _commBus = i2c_bus;

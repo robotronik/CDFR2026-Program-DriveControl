@@ -51,9 +51,6 @@ int main(void)
 	wheelB =  new Wheel(DISTANCE_WHEEL,-60, DIAMETER_WHEEL, motorB);
 	wheelC =  new Wheel(DISTANCE_WHEEL, 60, DIAMETER_WHEEL, motorC);
 
-	requestLinearScalarChange(0.999f);
-	requestAngularScalarChange(0.992f);
-
 	setPosition(0, 0, 0);
 	setTarget(0, 0, 0);
 	
@@ -87,7 +84,7 @@ int main(void)
 		// Write the position to debug console
 		dbg.interval([](){
 			odometryDebugPrint();
-		},100);
+		},30);
 
 		//BLINK LED
 		ledToggleSeq.interval([](){

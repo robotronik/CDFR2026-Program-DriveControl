@@ -13,8 +13,6 @@ void odometrySetup(const odometry_config_t &config);
 void odometryUpdate(double dt);
 void odometryResetPose(position_t pose);
 
-void odometrySetLowpassAlpha(float alpha);
-
 void odometryRequestScalar(float scalar);
 float odometryGetScalar();
 void odometryRequestAngularScalar(float scalar);
