@@ -1,16 +1,12 @@
 #include "I2C.h"
 #include "interface/drive_interface.h"
 
-#ifdef SIMULATION
-    #include <hardware_interface.h>
-#else
-    #include <libopencm3/stm32/i2c.h>
-    #include <libopencm3/stm32/gpio.h>
-    #include <libopencm3/stm32/rcc.h>
-    #include <libopencm3/cm3/nvic.h>
-    #include <libopencm3/stm32/usart.h>
-    #include <libopencm3/stm32/gpio.h>
-#endif
+#include <libopencm3/stm32/i2c.h>
+#include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/cm3/nvic.h>
+#include <libopencm3/stm32/usart.h>
+#include <libopencm3/stm32/gpio.h>
 
 #include <string.h>
 

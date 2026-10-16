@@ -3,13 +3,9 @@
 #include <stdarg.h>
 #include "config.h"
 
-#ifdef SIMULATION
-    #include <hardware_interface.h>
-#else
-    #include <libopencm3/stm32/rcc.h>
-    #include <libopencm3/stm32/gpio.h>
-    #include <libopencm3/stm32/usart.h>
-#endif
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/usart.h>
 
 
 void _uartClock_setup(void);
