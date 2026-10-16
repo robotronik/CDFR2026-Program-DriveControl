@@ -91,7 +91,10 @@ int main(void)
 
 	setPosition(0, 0, 0);
 	setTarget(0, 0, 0);
-	
+
+	usartprintf("Ready to be driven\n");
+	PlayStartupSound();
+
 //
 //	Main Loop of the robot
 //

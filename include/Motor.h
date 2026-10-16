@@ -29,6 +29,11 @@ void SetDriveMode(int mode);
 void ResetDrive();
 void DriveSetup();
 
+// Plays a short drone-ESC style chime through the motors to signal that the
+// robot is booted and ready to be driven. Blocking: returns once the melody
+// has finished and the drive is disabled again.
+void PlayStartupSound();
+
 
 class Motor
 {

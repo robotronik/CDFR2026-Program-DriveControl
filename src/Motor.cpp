@@ -73,6 +73,56 @@ void ResetDrive(){
 	delay_ms(1);
 }
 
+// Points the shared TIM1 carrier (all three speed-control outputs) at the given
+// frequency and holds every channel at 50% duty. Because the drive runs in
+// fast-decay mode, 50% duty yields a zero average winding voltage, so putting
+// the carrier in the audio band makes the motors emit a tone at that frequency
+// without producing any net rotation.
+static void setToneCarrier(double frequency_hz) {
+	// Timer clock is 84 MHz; raise the prescaler until the period fits in 16 bits.
+	uint32_t prescaler = 0;
+	uint32_t period = RCC_CLOCK_FREQ_HZ / (uint32_t)(frequency_hz);
+	while (period > 0xFFFF) {
+		prescaler++;
+		period = RCC_CLOCK_FREQ_HZ / ((prescaler + 1) * (uint32_t)(frequency_hz));
+	}
+
+	timer_set_prescaler(TIM1, prescaler);
+	timer_set_period(TIM1, period);
+	timer_set_oc_value(TIM1, TIM_OC1, period / 2);
+	timer_set_oc_value(TIM1, TIM_OC2, period / 2);
+	timer_set_oc_value(TIM1, TIM_OC3, period / 2);
+	timer_generate_event(TIM1, TIM_EGR_UG);
+}
+
+// Restores the 21 kHz carrier used by the control loop with all channels idle.
+static void restoreDriveCarrier() {
+	timer_set_prescaler(TIM1, 0);
+	timer_set_period(TIM1, TIMERPERIOD);
+	timer_set_oc_value(TIM1, TIM_OC1, TIMERPERIOD / 2);
+	timer_set_oc_value(TIM1, TIM_OC2, TIMERPERIOD / 2);
+	timer_set_oc_value(TIM1, TIM_OC3, TIMERPERIOD / 2);
+	timer_generate_event(TIM1, TIM_EGR_UG);
+}
+
+// Three ascending high notes (G5, C6, E6) separated by silent pauses, mimicking
+// the power-up beeps of a quadcopter ESC.
+void PlayStartupSound() {
+	static const double notes[] = { 784.0, 1046.5, 1318.5 };
+	static const uint32_t note_ms = 180;
+	static const uint32_t gap_ms = 60;
+
+	DriveEnable();
+	for (double note : notes) {
+		setToneCarrier(note);
+		delay_ms(note_ms);
+		restoreDriveCarrier(); // inaudible 21 kHz carrier = silence
+		delay_ms(gap_ms);
+	}
+	restoreDriveCarrier();
+	DriveDisable();
+}
+
 void DriveSetup(){
 	setupDriveGPIO();
 	setuptimer();
