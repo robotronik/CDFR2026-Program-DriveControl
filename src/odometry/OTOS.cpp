@@ -272,7 +272,21 @@ return_t OTOS::getOffset(position_t &pose)
 
 return_t OTOS::setOffset(position_t &pose)
 {
-    return writePoseRegs(kRegOffXL, pose, kMeterToInt16, kRadToInt16);
+    return_t result = writePoseRegs(kRegOffXL, pose, kMeterToInt16, kRadToInt16);
+    if (result != ret_OK)
+        return result;
+
+    _offset.x = pose.x;
+    _offset.y = pose.y;
+    _offset.a = pose.a;
+    return ret_OK;
+}
+
+void OTOS::cachedOffset(position_t &offset) const
+{
+    offset.x = _offset.x;
+    offset.y = _offset.y;
+    offset.a = _offset.a;
 }
 
 return_t OTOS::getPosition(position_t &pose)

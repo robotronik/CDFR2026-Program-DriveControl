@@ -143,11 +143,10 @@ void drive_interface::set_offset(position_t offset) {
     requestOffsetChange(offset);
 }
 
+// Called from the I2C1 interrupt: must not touch the OTOS bus, which the main loop owns
 position_t drive_interface::get_offset() {
-    position_t offset = {0.0, 0.0, 0.0};
-    if (otos->getOffset(offset) != ret_OK) {
-        return position_t{0.0, 0.0, 0.0};
-    }
+    position_t offset;
+    otos->cachedOffset(offset);
     return offset;
 }
 
