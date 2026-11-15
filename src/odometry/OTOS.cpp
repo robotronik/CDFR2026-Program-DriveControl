@@ -201,7 +201,7 @@ return_t OTOS::setLinearScalar(float scalar)
     if (verify != rawScalar)
         return ret_FAIL;
 
-    // Write the scalar to the device
+    _linearScalar = ((int8_t)rawScalar) * 0.001f + 1.0f;
     return ret_OK;
 }
 
@@ -235,7 +235,11 @@ return_t OTOS::setAngularScalar(float scalar)
     uint8_t rawScalar = (int8_t)((scalar - 1.0f) * 1000 + 0.5f);
 
     // Write the scalar to the device
-    return _commBus->writeRegister(kRegScalarAngular, rawScalar) == 0 ? ret_OK : ret_FAIL;
+    if (_commBus->writeRegister(kRegScalarAngular, rawScalar) != 0)
+        return ret_FAIL;
+
+    _angularScalar = ((int8_t)rawScalar) * 0.001f + 1.0f;
+    return ret_OK;
 }
 
 return_t OTOS::resetTracking()

@@ -197,6 +197,10 @@ class OTOS
     /// @return 0 for succuss, negative for errors, positive for warnings
     return_t setAngularScalar(float scalar);
 
+    /// @brief Last scalars successfully written, read without I2C (safe from interrupts)
+    float cachedLinearScalar() const { return _linearScalar; }
+    float cachedAngularScalar() const { return _angularScalar; }
+
     /// @brief Resets the tracking algorithm, which resets the position to the
     /// origin, but can also be used to recover from some rare tracking errors
     /// @return 0 for succuss, negative for errors, positive for warnings
@@ -338,6 +342,10 @@ class OTOS
     // angular units
     float _meterToUnit;
     float _radToUnit;
+
+    // Scalars as written to the device (1.0 is the OTOS power-on default)
+    volatile float _linearScalar = 1.0f;
+    volatile float _angularScalar = 1.0f;
 
     // OTOS register map
     static constexpr uint8_t kRegProductId = 0x00;
