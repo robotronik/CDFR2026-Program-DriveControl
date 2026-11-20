@@ -47,19 +47,12 @@ void setupDeviceI2C(){
 // External millisecond counter (SysTick)
 extern volatile uint32_t systicks;
 
-// Reset the I2C peripheral and bus
+// Reset the I2C peripheral and reconfigure it. Clearing CR2 by hand used to wipe
+// FREQ (clock config), which left the bus dead until reboot.
 static void i2c_bus_reset()
 {
-    i2c_peripheral_disable(i2c);
-
-    // Clear CR1/CR2
-    I2C_CR1(i2c) = 0;
-    I2C_CR2(i2c) = 0;
-
-    i2c_peripheral_enable(i2c);
-
-    // Generate STOP to release bus
-    i2c_send_stop(i2c);
+    rcc_periph_reset_pulse(RST_I2C3);
+    setupDeviceI2C();
 }
 
 // --- Safe 7-bit write ---

@@ -124,12 +124,9 @@ void drive_interface::set_linear_scalar(float scalar) {
     requestLinearScalarChange(scalar);
 }
 
+// Called from the I2C1 interrupt: must not touch the OTOS bus, which the main loop owns
 float drive_interface::get_linear_scalar() {
-    float scalar = 1.0f;
-    if (otos->getLinearScalar(scalar) != ret_OK) {
-        return 1.0f;
-    }    
-    return scalar;
+    return otos->cachedLinearScalar();
 }
 
 void drive_interface::set_angular_scalar(float scalar) {
@@ -138,11 +135,7 @@ void drive_interface::set_angular_scalar(float scalar) {
 }
 
 float drive_interface::get_angular_scalar() {
-    float scalar = 1.0f;
-    if (otos->getAngularScalar(scalar) != ret_OK) {
-        return 1.0f;
-    }
-    return scalar;
+    return otos->cachedAngularScalar();
 }
 
 void drive_interface::set_offset(position_t offset) {
@@ -150,11 +143,10 @@ void drive_interface::set_offset(position_t offset) {
     requestOffsetChange(offset);
 }
 
+// Called from the I2C1 interrupt: must not touch the OTOS bus, which the main loop owns
 position_t drive_interface::get_offset() {
-    position_t offset = {0.0, 0.0, 0.0};
-    if (otos->getOffset(offset) != ret_OK) {
-        return position_t{0.0, 0.0, 0.0};
-    }
+    position_t offset;
+    otos->cachedOffset(offset);
     return offset;
 }
 
